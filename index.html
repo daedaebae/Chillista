@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chillista</title>
+    <link rel="stylesheet" href="css/chillista.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="game-container">
+        <!-- Screens -->
+        <div id="screen-cart" class="screen active">
+            <div id="hud" class="hud-horizontal">
+                <!-- Player Name -->
+                <div class="hud-item" title="Your barista name">
+                    <span class="hud-icon">👤</span>
+                    <span id="player-name-display" class="hud-value">Guest</span>
+                </div>
+
+                <!-- Time -->
+                <div class="hud-item" title="Current time (8 AM - 5 PM)">
+                    <span class="hud-icon">⏰</span>
+                    <span id="time-display" class="hud-value">08:00 AM</span>
+                </div>
+
+                <!-- Cash -->
+                <div class="hud-item" title="Your current funds">
+                    <span class="hud-icon">💰</span>
+                    <span id="cash-display" class="hud-value">$50.00</span>
+                </div>
+
+                <!-- Reputation -->
+                <div class="hud-item" title="Your reputation level">
+                    <span class="hud-icon">⭐</span>
+                    <span id="rep-display" class="hud-value">0</span>
+                </div>
+
+                <!-- Current Customer -->
+                <div class="hud-item" title="Current customer waiting">
+                    <span class="hud-icon">☕</span>
+                    <span id="customer-display" class="hud-value">Waiting...</span>
+                </div>
+
+                <!-- Inventory Toggle -->
+                <div class="hud-item hud-inventory-toggle" title="Click to view inventory details"
+                    onclick="game.toggleInventory()">
+                    <span class="hud-icon">📦</span>
+                    <span class="hud-value">Pantry</span>
+                    <span class="hud-expand">▼</span>
+                </div>
+            </div>
+
+            <!-- Expandable Inventory Panel -->
+            <div id="inventory-panel" class="inventory-panel hidden">
+                <div id="inventory-display">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <!-- End of HUD -->
+
+            <div id="visual-area" class="visual-area">
+                <div id="weather-overlay" class="weather-overlay"></div>
+                <img src="assets/pixel_cafe_bg.png" id="bg-image" class="bg-image" alt="Coffee Shop Background">
+                <div id="decorations-area" class="decorations-area">
+                    <!-- Decorations go here -->
+                </div>
+                <div class="character-area">
+                    <img src="assets/pixel_barista.png" id="barista-avatar" class="avatar barista" alt="Barista">
+                    <img id="customer-portrait" class="avatar customer" alt="Customer" style="opacity: 0;">
+                </div>
+                <div id="brewing-station" class="brewing-station state-empty">
+                    <div class="plunger"></div>
+                    <div class="chamber">
+                        <div class="contents"></div>
+                    </div>
+                </div>
+
+                <div id="dialogue-box" class="dialogue-box hidden">
+                    <div id="dialogue-text" class="dialogue-text"></div>
+                    <div id="dialogue-choices" class="dialogue-choices hidden"></div>
+                    <div class="dialogue-continue">▼</div>
+                </div>
+            </div>
+
+            <main class="game-log" id="game-log">
+                <div class="log-entry system">Welcome to your cozy coffee cart.</div>
+                <div class="log-entry system">Relax and brew some coffee.</div>
+            </main>
+
+            <footer class="controls-area">
+                <!-- Dialogue Choices (Hidden by default) -->
+                <div id="dialogue-controls" class="control-group hidden">
+                    <button class="btn action" onclick="game.handleInput('DIALOGUE_SMALL_TALK')">Small Talk</button>
+                    <button class="btn action" onclick="game.handleInput('DIALOGUE_UPSELL')">Upsell</button>
+                    <button class="btn nav" onclick="game.handleInput('DIALOGUE_END')">Brew</button>
+                </div>
+
+                <!-- Coffee Controls -->
+                <div id="coffee-controls" class="control-group">
+                    <button class="btn action" onclick="game.handleInput('GRIND')">Grind</button>
+                    <button class="btn action" onclick="game.handleInput('ADD_WATER')">Water</button>
+                    <button class="btn action" onclick="game.handleInput('STIR')">Stir</button>
+                    <button class="btn action" onclick="game.handleInput('PLUNGE')">Plunge</button>
+                    <button class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
+                    <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
+                    <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
+                    <button class="btn nav" onclick="game.handleInput('SHOP')">Shop</button>
+                    <button class="btn nav" onclick="game.handleInput('MAP')">Map</button>
+                </div>
+
+                <!-- Matcha Controls -->
+                <div id="matcha-controls" class="control-group hidden">
+                    <button class="btn action" onclick="game.handleInput('SIFT')">Sift</button>
+                    <button class="btn action" onclick="game.handleInput('ADD_WATER')">Water</button>
+                    <button class="btn action" onclick="game.handleInput('WHISK')">Whisk</button>
+                    <button class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
+                    <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
+                    <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
+                </div>
+
+                <!-- Espresso Controls -->
+                <div id="espresso-controls" class="control-group hidden">
+                    <button class="btn action" onclick="game.handleInput('GRIND')">Grind</button>
+                    <button class="btn action" onclick="game.handleInput('TAMP')">Tamp</button>
+                    <button class="btn action" onclick="game.handleInput('PULL_SHOT')">Pull</button>
+                    <button class="btn action" onclick="game.handleInput('STEAM_MILK')">Steam</button>
+                    <button class="btn action" onclick="game.handleInput('POUR')">Pour</button>
+                    <button class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
+                    <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
+                    <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
+                </div>
+            </footer>
+        </div>
+        <!-- End of screen-cart -->
+
+        <div id="screen-map" class="screen hidden">
+            <div class="map-header">
+                <h2>Town Map</h2>
+            </div>
+            <div class="map-grid">
+                <button class="map-node" onclick="game.switchScreen('cart')">
+                    <span class="icon">☕</span>
+                    <span class="name">My Cart</span>
+                </button>
+                <button class="map-node" onclick="game.switchScreen('shop')">
+                    <span class="icon">🛒</span>
+                    <span class="name">Supply Shop</span>
+                </button>
+                <button id="node-park" class="map-node disabled" onclick="game.switchScreen('park')">
+                    <span class="icon">🌳</span>
+                    <span class="name">City Park</span>
+                    <span class="lock-msg">Need 20 Rep</span>
+                </button>
+                <button class="map-node disabled">
+                    <span class="icon">🏠</span>
+                    <span class="name">Home (Locked)</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="screen-park" class="screen hidden">
+            <header class="hud">
+                <!-- Reusing HUD for now, but maybe simplified -->
+                <div class="hud-section"><span class="label">TIME</span><span id="park-time-display">08:00 AM</span>
+                </div>
+                <div class="hud-section"><span class="label">FUNDS</span><span id="park-cash-display">$50.00</span>
+                </div>
+                <div class="hud-section"><span class="label">REP</span><span id="park-rep-display">0 ★</span></div>
+            </header>
+            <div class="visual-area park-bg">
+                <div class="character-area">
+                    <img src="assets/pixel_barista.png" class="avatar barista" alt="Barista">
+                    <img id="park-customer-portrait" class="avatar customer" alt="Customer" style="opacity: 0;">
+                </div>
+                <!-- Park has no brewing station visible, it's a "rush" mode or maybe just same mechanics? 
+                     For simplicity, let's reuse the brewing station UI but overlay it or just copy it.
+                     Actually, let's keep the brewing mechanics available everywhere. 
+                     So the "Park" screen needs the brewing station too. -->
+                <div id="park-brewing-station" class="brewing-station state-empty">
+                    <div class="plunger"></div>
+                    <div class="chamber">
+                        <div class="contents"></div>
+                    </div>
+                </div>
+            </div>
+            <main class="game-log" id="park-game-log">
+                <div class="log-entry system">City Park. Rush hour is crazy here!</div>
+            </main>
+            <footer class="controls-area">
+                <div class="control-group">
+                    <button class="btn action" onclick="game.handleInput('GRIND STD')">Grind</button>
+                    <button class="btn action" onclick="game.handleInput('ADD_WATER')">Water</button>
+                    <button class="btn action" onclick="game.handleInput('STIR')">Stir</button>
+                    <button class="btn action" onclick="game.handleInput('PLUNGE')">Plunge</button>
+                    <button class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn nav" onclick="game.switchScreen('map')">🗺️ Leave Park</button>
+                </div>
+            </footer>
+        </div>
+
+        <div id="screen-shop" class="screen hidden">
+            <div class="shop-header">
+                <h2>Supply Shop</h2>
+                <div class="shop-cash">Funds: <span id="shop-cash-display">$0.00</span></div>
+            </div>
+            <div class="shop-items">
+                <div class="shop-item">
+                    <div class="icon">🫘</div>
+                    <div class="details">
+                        <h3>Standard Beans</h3>
+                        <p>100g for $5</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY BEANS_STD 100')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">✨</div>
+                    <div class="details">
+                        <h3>Premium Beans</h3>
+                        <p>100g for $10</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY BEANS_PRM 100')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">🥛</div>
+                    <div class="details">
+                        <h3>Fresh Milk</h3>
+                        <p>200ml for $4</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY MILK 200')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">🪴</div>
+                    <div class="details">
+                        <h3>Potted Plant</h3>
+                        <p>Cozy vibes. $20</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY PLANT')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">⚙️</div>
+                    <div class="details">
+                        <h3>Fast Grinder</h3>
+                        <p>Instant grind. $50</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY UPGRADE_GRINDER')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">🍵</div>
+                    <div class="details">
+                        <h3>Matcha Set</h3>
+                        <p>Ceremony Kit. $100</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY UPGRADE_MATCHA')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">☕️</div>
+                    <div class="details">
+                        <h3>Espresso Machine</h3>
+                        <p>Pro Gear. $250</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY UPGRADE_ESPRESSO')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">🍃</div>
+                    <div class="details">
+                        <h3>Matcha Powder</h3>
+                        <p>50g for $10</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY MATCHA 50')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">🥤</div>
+                    <div class="details">
+                        <h3>Paper Cups</h3>
+                        <p>50 Pack. $5.00</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY CUPS 50')">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">📄</div>
+                    <div class="details">
+                        <h3>Filters</h3>
+                        <p>50 Pack. $2.50</p>
+                    </div>
+                    <button class="btn buy" onclick="game.handleInput('BUY FILTERS 50')">Buy</button>
+                </div>
+            </div>
+            <button class="btn nav back-btn" onclick="game.switchScreen('map')">Back to Map</button>
+        </div>
+
+        <div id="screen-summary" class="screen hidden summary-screen">
+            <h2>Day Complete!</h2>
+            <div class="summary-stats">
+                <div class="stat-row">
+                    <span>Total Earnings:</span>
+                    <span id="summary-earnings">$0.00</span>
+                </div>
+                <div class="stat-row">
+                    <span>Customers Served:</span>
+                    <span id="summary-customers">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Tips Earned:</span>
+                    <span id="summary-tips">$0.00</span>
+                </div>
+            </div>
+            <button class="btn action" onclick="game.startNewDay()">Start Next Day</button>
+        </div>
+    </div>
+    <!-- Name Entry Modal -->
+    <div id="name-modal" class="menu-overlay">
+        <div class="coffee-menu" style="height: auto; min-height: 300px;">
+            <h2>Welcome Barista!</h2>
+            <p style="margin-bottom: 1.5rem;">What should we call you?</p>
+            <div class="menu-group">
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="12"
+                    style="font-family: var(--font-ui); font-size: 1.5rem; padding: 0.5rem; width: 100%; text-align: center; border: 2px solid var(--text-color); border-radius: 8px;">
+            </div>
+            <div class="menu-group">
+                <button id="name-submit-btn" class="btn action" style="width: 100%">Start Brewing</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="music-toggle" class="music-toggle" onclick="game.toggleMenu()">⚙️</div>
+
+    <!-- Diegetic Menu Overlay -->
+    <div id="menu-overlay" class="menu-overlay hidden">
+        <div class="coffee-menu">
+            <button class="close-btn" onclick="game.toggleMenu()">×</button>
+            <h2>Settings</h2>
+
+            <div class="menu-group">
+                <label>
+                    <input type="checkbox" id="music-enabled" checked onchange="game.toggleMusic(this.checked)">
+                    Music Enabled
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <label>Music Volume</label>
+                <input type="range" min="0" max="100" value="30" class="slider"
+                    oninput="game.setMusicVolume(this.value)">
+            </div>
+
+            <div class="menu-group">
+                <label>SFX Volume</label>
+                <input type="range" min="0" max="100" value="10" class="slider" oninput="game.setSFXVolume(this.value)">
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.nextTrack()">⏭️ Next Track</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.toggleFullscreen()">Toggle
+                    Fullscreen</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.saveGame()">Save Game</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%; background-color: #e74c3c;"
+                    onclick="game.resetGame()">Reset Progress</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn nav" style="width: 100%" onclick="game.toggleMenu()">Exit Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            alert('Error: ' + msg + '\nLine: ' + lineNo + '\nColumn: ' + columnNo);
+            return false;
+        };
+    </script>
+    <script src="js/chillista.js"></script>
+</body>
+
+</html>
