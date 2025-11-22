@@ -388,7 +388,7 @@ class Game {
     init() {
         // Try to load game first
         if (this.loadGame()) {
-            this.startGame();
+            this.startGame(false); // false = loaded game, don't randomize weather
         } else {
             // New game flow
             document.getElementById('name-modal').classList.remove('hidden');
@@ -418,7 +418,7 @@ class Game {
             if (name) {
                 this.state.playerName = name;
                 document.getElementById('name-modal').classList.add('hidden');
-                this.startGame();
+                this.startGame(true); // true = new game, randomize weather
             } else {
                 // Shake effect or error
                 input.style.borderColor = 'red';
@@ -430,9 +430,9 @@ class Game {
         }
     }
 
-    startGame() {
+    startGame(isNewGame = true) {
         try {
-            console.log("startGame called");
+            console.log("startGame called", isNewGame ? "(new game)" : "(loaded game)");
             this.updateHUD();
             // Expose game instance for button clicks
             window.game = this;
@@ -463,9 +463,20 @@ class Game {
             };
             document.addEventListener('click', unlockAudio);
 
-            // Initialize weather for first day
-            const weather = Math.random() > 0.7 ? 'rainy' : 'sunny';
-            this.setWeather(weather);
+            // Initialize weather only for new games (not when loading a saved game)
+            if (isNewGame) {
+                const weather = Math.random() > 0.7 ? 'rainy' : 'sunny';
+                this.setWeather(weather);
+            } else {
+                // Restore saved weather without logging (already set from loadGame)
+                // Just ensure visual state matches
+                if (this.state.weather === 'rainy') {
+                    this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
+                    this.ui.weatherOverlay.style.opacity = '1';
+                } else {
+                    this.ui.weatherOverlay.style.opacity = '0';
+                }
+            }
 
             // Start Real-time Clock
             this.startClock();
