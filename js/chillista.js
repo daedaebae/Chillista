@@ -217,58 +217,58 @@ const DIALOGUE_DATA = {
     student: {
         greeting: ["Hey, I'm in a rush.", "Do you have Wi-Fi?", "I need caffeine, stat.", "Got an exam in an hour!", "Is this place quiet enough to study?"],
         choices: [
-            { text: "Study hard!", effect: { type: 'patience', value: 10 }, response: "Thanks, I'm trying!" },
-            { text: "Need a snack?", effect: { type: 'upsell', chance: 0.4, value: 3 }, response: "Maybe a muffin..." },
-            { text: "Quiet day?", effect: { type: 'reputation', value: 1 }, response: "I hope so." },
-            { text: "Free refill?", effect: { type: 'custom', action: 'refill_offer' }, response: "Really? You're a lifesaver!" },
-            { text: "Good luck!", effect: { type: 'patience', value: 15 }, response: "Thanks! I'll need it." }
+            { text: "Study hard!", effect: { type: 'patience', value: 10, satisfaction: 5 }, response: "Thanks, I'm trying!" },
+            { text: "Need a snack?", effect: { type: 'upsell', chance: 0.4, value: 3, satisfaction: 3 }, response: "Maybe a muffin..." },
+            { text: "Quiet day?", effect: { type: 'reputation', value: 1, satisfaction: 2 }, response: "I hope so." },
+            { text: "Free refill?", effect: { type: 'custom', action: 'refill_offer', satisfaction: 10 }, response: "Really? You're a lifesaver!" },
+            { text: "Good luck!", effect: { type: 'patience', value: 15, satisfaction: 8 }, response: "Thanks! I'll need it." }
         ]
     },
     hipster: {
         greeting: ["Is this single origin?", "I only drink oat milk.", "Cool vibe here.", "Love the aesthetic.", "Do you roast your own beans?"],
         choices: [
-            { text: "It's artisanal.", effect: { type: 'reputation', value: 2 }, response: "Nice, I respect that." },
-            { text: "Try the Matcha?", effect: { type: 'upsell', chance: 0.7, value: 5 }, response: "Ooh, matcha sounds good." },
-            { text: "Vinyl is better.", effect: { type: 'patience', value: 15 }, response: "Finally, someone gets it." },
-            { text: "Check out my playlist.", effect: { type: 'custom', action: 'music_compliment' }, response: "This track is fire." },
-            { text: "Locally sourced.", effect: { type: 'reputation', value: 3 }, response: "That's what I like to hear!" }
+            { text: "It's artisanal.", effect: { type: 'reputation', value: 2, satisfaction: 8 }, response: "Nice, I respect that." },
+            { text: "Try the Matcha?", effect: { type: 'upsell', chance: 0.7, value: 5, satisfaction: 5 }, response: "Ooh, matcha sounds good." },
+            { text: "Vinyl is better.", effect: { type: 'patience', value: 15, satisfaction: 12 }, response: "Finally, someone gets it." },
+            { text: "Check out my playlist.", effect: { type: 'custom', action: 'music_compliment', satisfaction: 10 }, response: "This track is fire." },
+            { text: "Locally sourced.", effect: { type: 'reputation', value: 3, satisfaction: 10 }, response: "That's what I like to hear!" }
         ]
     },
     tourist: {
         greeting: ["Wow, so cute!", "Where is the park?", "Can I take a photo?", "This is so charming!", "Is this a local favorite?"],
         choices: [
-            { text: "Welcome!", effect: { type: 'tips', value: 2 }, response: "You're so kind! Here's a tip." },
-            { text: "Buy a souvenir?", effect: { type: 'upsell', chance: 0.5, value: 10 }, response: "Oh, a mug? Sure!" },
-            { text: "Park is nearby.", effect: { type: 'reputation', value: 1 }, response: "Thanks for the info!" },
-            { text: "Say cheese!", effect: { type: 'custom', action: 'photo_op' }, response: "*Click* Perfect shot!" },
-            { text: "Try our special!", effect: { type: 'upsell', chance: 0.6, value: 4 }, response: "When in Rome, right?" }
+            { text: "Welcome!", effect: { type: 'tips', value: 2, satisfaction: 8 }, response: "You're so kind! Here's a tip." },
+            { text: "Buy a souvenir?", effect: { type: 'upsell', chance: 0.5, value: 10, satisfaction: 4 }, response: "Oh, a mug? Sure!" },
+            { text: "Park is nearby.", effect: { type: 'reputation', value: 1, satisfaction: 6 }, response: "Thanks for the info!" },
+            { text: "Say cheese!", effect: { type: 'custom', action: 'photo_op', satisfaction: 12 }, response: "*Click* Perfect shot!" },
+            { text: "Try our special!", effect: { type: 'upsell', chance: 0.6, value: 4, satisfaction: 5 }, response: "When in Rome, right?" }
         ]
     },
     regular: {
         greeting: ["The usual, please.", "Good to see you.", "How's business?", "Another day, another coffee.", "You know what I like."],
         choices: [
-            { text: "On the house.", effect: { type: 'reputation', value: 5 }, response: "You're the best! I'll tell everyone." },
-            { text: "Try something new?", effect: { type: 'upsell', chance: 0.3, value: 4 }, response: "I trust you. Surprise me." },
-            { text: "Busy day.", effect: { type: 'patience', value: 20 }, response: "Take your time, I'm good." },
-            { text: "How's work?", effect: { type: 'patience', value: 10 }, response: "Same old, same old. Thanks for asking!" }
+            { text: "On the house.", effect: { type: 'reputation', value: 5, satisfaction: 15 }, response: "You're the best! I'll tell everyone." },
+            { text: "Try something new?", effect: { type: 'upsell', chance: 0.3, value: 4, satisfaction: 3 }, response: "I trust you. Surprise me." },
+            { text: "Busy day.", effect: { type: 'patience', value: 20, satisfaction: 5 }, response: "Take your time, I'm good." },
+            { text: "How's work?", effect: { type: 'patience', value: 10, satisfaction: 7 }, response: "Same old, same old. Thanks for asking!" }
         ]
     },
     critic: {
         greeting: ["Impress me.", "I'm writing a review.", "Is this sanitary?", "I've had better.", "Show me what you've got."],
         choices: [
-            { text: "We use best beans.", effect: { type: 'reputation', value: 3 }, response: "We shall see." },
-            { text: "Complimentary water?", effect: { type: 'patience', value: 15 }, response: "Hmph. Acceptable." },
-            { text: "No photos please.", effect: { type: 'reputation', value: -2 }, response: "Excuse me? I am a journalist!" },
-            { text: "Fresh roasted today.", effect: { type: 'reputation', value: 4 }, response: "Interesting. Continue." }
+            { text: "We use best beans.", effect: { type: 'reputation', value: 3, satisfaction: 5 }, response: "We shall see." },
+            { text: "Complimentary water?", effect: { type: 'patience', value: 15, satisfaction: 3 }, response: "Hmph. Acceptable." },
+            { text: "No photos please.", effect: { type: 'reputation', value: -2, satisfaction: -10 }, response: "Excuse me? I am a journalist!" },
+            { text: "Fresh roasted today.", effect: { type: 'reputation', value: 4, satisfaction: 8 }, response: "Interesting. Continue." }
         ]
     },
     default: {
         greeting: ["Hello.", "One coffee.", "Nice weather.", "Good morning!", "Smells great in here."],
         choices: [
-            { text: "How are you?", effect: { type: 'reputation', value: 1 }, response: "I'm good, thanks." },
-            { text: "Want a pastry?", effect: { type: 'upsell', chance: 0.3, value: 3 }, response: "No thanks." },
-            { text: "Nice outfit.", effect: { type: 'patience', value: 5 }, response: "Oh, thank you!" },
-            { text: "Beautiful day!", effect: { type: 'patience', value: 8 }, response: "It really is!" }
+            { text: "How are you?", effect: { type: 'reputation', value: 1, satisfaction: 4 }, response: "I'm good, thanks." },
+            { text: "Want a pastry?", effect: { type: 'upsell', chance: 0.3, value: 3, satisfaction: 2 }, response: "No thanks." },
+            { text: "Nice outfit.", effect: { type: 'patience', value: 5, satisfaction: 6 }, response: "Oh, thank you!" },
+            { text: "Beautiful day!", effect: { type: 'patience', value: 8, satisfaction: 5 }, response: "It really is!" }
         ]
     }
 };
@@ -355,19 +355,19 @@ class Game {
             state: this.state,
             timestamp: Date.now()
         };
-        localStorage.setItem('chillista_save', JSON.stringify(saveData));
+        localStorage.setItem('baristasim_save', JSON.stringify(saveData));
         this.log("Game Saved.", 'system');
     }
 
     resetGame() {
         if (confirm("Are you sure you want to reset your progress? This cannot be undone.")) {
-            localStorage.removeItem('chillista_save');
+            localStorage.removeItem('baristasim_save');
             location.reload();
         }
     }
 
     loadGame() {
-        const saveString = localStorage.getItem('chillista_save');
+        const saveString = localStorage.getItem('baristasim_save');
         if (saveString) {
             try {
                 const saveData = JSON.parse(saveString);
@@ -388,7 +388,7 @@ class Game {
     init() {
         // Try to load game first
         if (this.loadGame()) {
-            this.startGame();
+            this.startGame(false); // false = loaded game, don't randomize weather
         } else {
             // New game flow
             document.getElementById('name-modal').classList.remove('hidden');
@@ -418,7 +418,7 @@ class Game {
             if (name) {
                 this.state.playerName = name;
                 document.getElementById('name-modal').classList.add('hidden');
-                this.startGame();
+                this.startGame(true); // true = new game, randomize weather
             } else {
                 // Shake effect or error
                 input.style.borderColor = 'red';
@@ -430,9 +430,9 @@ class Game {
         }
     }
 
-    startGame() {
+    startGame(isNewGame = true) {
         try {
-            console.log("startGame called");
+            console.log("startGame called", isNewGame ? "(new game)" : "(loaded game)");
             this.updateHUD();
             // Expose game instance for button clicks
             window.game = this;
@@ -462,6 +462,21 @@ class Game {
                 }
             };
             document.addEventListener('click', unlockAudio);
+
+            // Initialize weather only for new games (not when loading a saved game)
+            if (isNewGame) {
+                const weather = Math.random() > 0.7 ? 'rainy' : 'sunny';
+                this.setWeather(weather);
+            } else {
+                // Restore saved weather without logging (already set from loadGame)
+                // Just ensure visual state matches
+                if (this.state.weather === 'rainy') {
+                    this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
+                    this.ui.weatherOverlay.style.opacity = '1';
+                } else {
+                    this.ui.weatherOverlay.style.opacity = '0';
+                }
+            }
 
             // Start Real-time Clock
             this.startClock();
@@ -630,6 +645,22 @@ class Game {
     applyDialogueEffect(effect) {
         if (!effect) return;
 
+        // Apply satisfaction change if present
+        if (effect.satisfaction && this.state.currentCustomer) {
+            this.state.currentCustomer.satisfaction += effect.satisfaction;
+            // Clamp between 0-100
+            this.state.currentCustomer.satisfaction = Math.max(0, Math.min(100, this.state.currentCustomer.satisfaction));
+
+            // Show feedback based on satisfaction change
+            if (effect.satisfaction > 8) {
+                this.log("Customer seems very happy! 😊", 'success');
+            } else if (effect.satisfaction > 0) {
+                this.log("Customer is pleased.", 'success');
+            } else if (effect.satisfaction < -5) {
+                this.log("Customer looks annoyed... 😞", 'error');
+            }
+        }
+
         switch (effect.type) {
             case 'reputation':
                 this.state.stats.reputation += effect.value;
@@ -656,7 +687,10 @@ class Game {
                     return true;
                 } else {
                     this.log("Upsell failed.", 'error');
-                    if (this.state.currentCustomer) this.state.currentCustomer.patience -= 10;
+                    if (this.state.currentCustomer) {
+                        this.state.currentCustomer.patience -= 10;
+                        this.state.currentCustomer.satisfaction -= 5; // Failed upsell hurts satisfaction
+                    }
                     return false;
                 }
                 break;
@@ -774,10 +808,12 @@ class Game {
             if (this.ui.customer) {
                 if (this.state.currentCustomer) {
                     const c = this.state.currentCustomer;
+                    const satisfactionEmoji = this.getSatisfactionEmoji(c.satisfaction);
                     this.ui.customer.innerHTML = `
                         <div>${c.name} (${c.personality})</div>
                         <div>Order: ${c.order}</div>
                         <div>Mood: ${this.getPatienceLevel(c.patience)}</div>
+                        <div>Satisfaction: ${satisfactionEmoji} ${Math.round(c.satisfaction)}%</div>
                     `;
                 } else {
                     this.ui.customer.textContent = "Waiting for a guest...";
@@ -893,8 +929,16 @@ class Game {
             this.updateHUD();
             this.checkCustomerPatience(minutes);
 
+            // Weather affects customer arrival rate
+            let arrivalChance = 0.4; // Base chance (40% per minute)
+            if (this.state.weather === 'rainy') {
+                arrivalChance = 0.25; // Rainy days: fewer customers (25%)
+            } else if (this.state.weather === 'sunny') {
+                arrivalChance = 0.5; // Sunny days: more customers (50%)
+            }
+
             // Chance for new customer if none exists
-            if (!this.state.currentCustomer && Math.random() > 0.6) {
+            if (!this.state.currentCustomer && Math.random() > (1 - arrivalChance)) {
                 this.generateCustomer();
             }
 
@@ -1387,10 +1431,12 @@ class Game {
         if (type === 'rainy') {
             this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
             this.ui.weatherOverlay.style.opacity = '1';
-            this.log("It's a rainy day. Cozy vibes.", 'system');
+            this.log("It's a rainy day. Fewer customers, but cozy vibes.", 'system');
+            this.log("Customers seem less patient in the rain...", 'system');
         } else {
             this.ui.weatherOverlay.style.opacity = '0';
-            this.log("It's a sunny day.", 'system');
+            this.log("It's a sunny day. Perfect weather for coffee!", 'system');
+            this.log("Customers are in a great mood today!", 'system');
         }
     }
 
@@ -1479,6 +1525,13 @@ class Game {
             if (specialType === 'student') patience = 70;
             if (specialType === 'tourist') patience = 120;
 
+            // Weather affects customer patience
+            if (this.state.weather === 'rainy') {
+                patience = Math.floor(patience * 0.8); // Rainy: customers are 20% less patient
+            } else if (this.state.weather === 'sunny') {
+                patience = Math.floor(patience * 1.2); // Sunny: customers are 20% more patient
+            }
+
             let order = 'Coffee';
             // Order Logic
             if (this.state.upgrades.matchaSet && (specialType === 'hipster' || Math.random() < 0.3)) {
@@ -1502,7 +1555,9 @@ class Game {
                 decay: isPark ? 0.8 : 0.5,
                 portrait: portrait,
                 specialType: specialType,
-                arrivalTime: this.state.minutesElapsed
+                arrivalTime: this.state.minutesElapsed,
+                satisfaction: 50, // Start at neutral (0-100 scale)
+                conversationCount: 0
             };
 
             this.audio.playChime();
