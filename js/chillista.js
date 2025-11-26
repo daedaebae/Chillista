@@ -358,7 +358,7 @@ class Game {
         localStorage.setItem('chillista_save', JSON.stringify(saveData));
         this.log("Game Saved.", 'system');
         this.audio.playSuccess();
-        
+
         // Visual feedback - show a brief success message
         const saveBtn = document.querySelector('button[onclick="game.saveGame()"]');
         if (saveBtn) {
@@ -1363,6 +1363,7 @@ class Game {
             'BEANS_STD': { key: 'beans_standard', cost: 0.05, name: 'Std Beans' }, // $0.05 per gram
             'BEANS_PRM': { key: 'beans_premium', cost: 0.10, name: 'Prm Beans' }, // $0.10 per gram
             'MILK': { key: 'milk', cost: 0.02, name: 'Milk' }, // $0.02 per ml
+            'WATER': { key: 'water', cost: 0.004, name: 'Water' }, // $0.004 per ml ($2 for 500ml)
             'MATCHA': { key: 'matcha_powder', cost: 0.20, name: 'Matcha Powder' }, // $0.20 per gram
             'CUPS': { key: 'cups', cost: 0.10, name: 'Paper Cups' }, // $0.10 per cup
             'FILTERS': { key: 'filters', cost: 0.05, name: 'Paper Filters' }, // $0.05 per filter
@@ -1645,3 +1646,5 @@ class Game {
 window.onload = () => {
     new Game();
 };
+
+// End of line, man
