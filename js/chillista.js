@@ -921,9 +921,18 @@ class Game {
     }
 
     getPatienceLevel(p) {
-        if (p > 50) return "Happy 😊";
-        if (p > 20) return "Okay 😐";
-        return "Anxious 😓";
+        if (p > 80) return '😊 Chill';
+        if (p > 50) return '😐 Okay';
+        if (p > 20) return '😠 Annoyed';
+        return '🤬 Furious';
+    }
+
+    getSatisfactionEmoji(s) {
+        if (s >= 80) return '😍';
+        if (s >= 60) return '😊';
+        if (s >= 40) return '😐';
+        if (s >= 20) return '😕';
+        return '😞';
     }
 
     formatTime(minutesElapsed) {
