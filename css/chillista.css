@@ -51,8 +51,8 @@ body {
     margin: 0;
     overflow: hidden;
     /* Prevent scrollbars */
-    font-size: 16px;
-    /* Standard base font size */
+    font-size: 18px;
+    /* Increased base font size for bigger UI */
     /* zoom: 110%; Removed for better mobile control */
 }
 
@@ -441,7 +441,7 @@ body.dark-mode .controls-area {
 
 #coffee-controls {
     grid-template-columns: repeat(4, 1fr);
-    /* 4 columns for 2 rows */
+    /* 4 columns for 2 rows (8 buttons total) */
 }
 
 .control-group.hidden {
@@ -510,6 +510,31 @@ body.dark-mode .controls-area {
 
 .music-toggle:hover {
     transform: scale(1.15) rotate(90deg);
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.map-toggle {
+    position: fixed;
+    bottom: 15px;
+    right: 65px;
+    /* Next to music toggle */
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid var(--text-color);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 2000;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+}
+
+.map-toggle:hover {
+    transform: scale(1.15);
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
 }
 

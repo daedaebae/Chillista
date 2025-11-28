@@ -486,6 +486,16 @@ class Game {
         if (submitBtn) {
             submitBtn.addEventListener('click', () => this.submitName());
         }
+
+        // Bind Enter key for name input
+        const nameInput = document.getElementById('player-name-input');
+        if (nameInput) {
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.submitName();
+                }
+            });
+        }
     }
 
     submitName() {
@@ -1569,10 +1579,11 @@ class Game {
             'BEANS_STD': { key: 'beans_standard', cost: 0.05, name: 'Std Beans' }, // $0.05 per gram
             'BEANS_PRM': { key: 'beans_premium', cost: 0.10, name: 'Prm Beans' }, // $0.10 per gram
             'MILK': { key: 'milk', cost: 0.02, name: 'Milk' }, // $0.02 per ml
+            'MILK_OAT': { key: 'milk_oat', cost: 0.06, name: 'Oat-Milk' }, // $0.02 per ml
             'WATER': { key: 'water', cost: 0.004, name: 'Water' }, // $0.004 per ml ($2 for 500ml)
-            'MATCHA_STD': { key: 'matcha_powder', cost: 0.20, name: 'Matcha Powder' }, // $0.20 per gram
-            'MATCHA_PRM': { key: 'matcha_powder', cost: 0.20, name: 'Matcha Powder' }, // $0.20 per gram
-            'CUPS': { key: 'cups', cost: 0.10, name: 'Paper Cups' }, // $0.10 per cup
+            'MATCHA_STD': { key: 'matcha_powder', cost: 0.20, name: 'Matcha Powder' }, // $0.20 per gram,
+            'MATCHA_PRM': { key: 'matcha_powder', cost: 0.35, name: 'Matcha Powder' }, // $0.35 per gram
+            'CUPS': { key: 'cups', cost: 1.50, name: 'Paper Cups' }, // $1.50 per cup
             'FILTERS': { key: 'filters', cost: 0.05, name: 'Paper Filters' }, // $0.05 per filter
             'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' },
             'UPGRADE_GRINDER': { key: 'fastGrinder', cost: 50.00, name: 'Fast Grinder', type: 'upgrade' },
@@ -1658,25 +1669,6 @@ class Game {
 
     setWeather(type) {
         this.state.weather = type;
-
-        // Update weather icon
-        const weatherIcon = document.getElementById('weather-icon');
-        const weatherIndicator = document.getElementById('weather-indicator');
-
-        if (weatherIcon) {
-            if (type === 'rainy') {
-                weatherIcon.src = 'assets/weather_rainy.png';
-                if (weatherIndicator) weatherIndicator.title = 'Rainy Day';
-            } else if (type === 'sunny') {
-                weatherIcon.src = 'assets/weather_sunny.png';
-                if (weatherIndicator) weatherIndicator.title = 'Sunny Day';
-            } else {
-                weatherIcon.src = 'assets/weather_cloudy.png';
-                if (weatherIndicator) weatherIndicator.title = 'Cloudy Day';
-            }
-        }
-
-        // Update weather overlay
         if (this.ui.weatherOverlay) {
             if (type === 'rainy') {
                 this.ui.weatherOverlay.style.opacity = '0.3';

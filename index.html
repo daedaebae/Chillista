@@ -48,7 +48,7 @@
 
                 <!-- Weather Indicator -->
                 <div id="weather-indicator" class="hud-item" title="Current Weather">
-                    <img id="weather-icon" src="assets/weather_sunny.png" alt="Weather" class="weather-icon">
+                    <img id="weather-icon" src="assets/weather_sunny.gif" alt="Weather" class="weather-icon">
                 </div>
             </div>
 
@@ -119,7 +119,6 @@
                     <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
                     <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
                     <button class="btn nav" onclick="game.handleInput('SHOP')">Shop</button>
-                    <button class="btn nav" onclick="game.handleInput('MAP')">Map</button>
                 </div>
 
                 <!-- Matcha Controls -->
@@ -366,6 +365,7 @@
     </div>
 
     <div id="music-toggle" class="music-toggle" onclick="game.toggleMenu()">⚙️</div>
+    <div id="map-toggle" class="map-toggle" onclick="game.switchScreen('map')">🗺️</div>
 
     <!-- Diegetic Menu Overlay -->
     <div id="menu-overlay" class="menu-overlay hidden">

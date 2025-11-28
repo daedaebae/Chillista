@@ -64,6 +64,7 @@ A cozy 8-bit coffee cart simulation game where you brew coffee, chat with custom
 - Next track button to skip songs
 - Fullscreen mode
 - Save/Reset game progress
+- Floating Map button for easy navigation
 
 ## Technologies Used
 
