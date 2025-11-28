@@ -53,7 +53,7 @@ body {
     /* Prevent scrollbars */
     font-size: 20px;
     /* Increased base font size */
-    zoom: 120%;
+    zoom: 110%;
 }
 
 body.dark-mode {
