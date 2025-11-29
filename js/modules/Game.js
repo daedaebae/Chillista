@@ -5,7 +5,7 @@ import DIALOGUE_DATA from '../data/dialogueData.js';
 export class Game {
     constructor() {
         this.state = {
-            time: '08:00 AM', // Simplified for now, will need minutes
+            time: '05:00 AM', // Simplified for now, will need minutes
             minutesElapsed: 0, // 0 = 8:00 AM, 540 = 5:00 PM
             cash: 50.00,
             inventory: {
@@ -780,6 +780,11 @@ export class Game {
         this.saveGame();
     }
 
+    debugNextDay() {
+        this.log("Skipping to next day...", 'system');
+        this.endGame();
+    }
+
     debugToggleTimeSpeed() {
         const speeds = [1, 2, 5, 10];
         const currentIndex = speeds.indexOf(this.state.debug.timeSpeed || 1);
@@ -919,7 +924,7 @@ export class Game {
         try {
             // Time Display (12-hour format with AM/PM)
             const totalMinutes = this.state.minutesElapsed || 0; // Use minutesElapsed, default to 0
-            let hours = Math.floor(totalMinutes / 60) + 8; // Add 8 for 8:00 AM start
+            let hours = Math.floor(totalMinutes / 60) + 5; // Add 5 for 5:00 AM start
             const minutes = totalMinutes % 60;
             const period = hours >= 12 ? 'PM' : 'AM';
 
@@ -1083,7 +1088,7 @@ export class Game {
         }
     }
 
-    switchScreen(screenName) {
+    switchScreen(screenName, silent = false) {
         if (screenName === 'park' && !this.state.unlockedLocations.includes('park')) {
             this.audio.playError();
             return;
@@ -1103,7 +1108,9 @@ export class Game {
             setTimeout(() => target.classList.add('active'), 10);
         }
 
-        this.audio.playAction(); // Click sound
+        if (!silent) {
+            this.audio.playAction(); // Click sound
+        }
     }
 
     getPatienceLevel(p) {
@@ -1122,7 +1129,7 @@ export class Game {
     }
 
     formatTime(minutesElapsed) {
-        const startHour = 8;
+        const startHour = 5;
         const totalMinutes = (startHour * 60) + minutesElapsed;
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
@@ -1154,7 +1161,7 @@ export class Game {
             // Skip customer arrival if disabled in debug mode
             if (this.state.debug && this.state.debug.customerArrivalDisabled) {
                 // Check for end of day
-                if (this.state.minutesElapsed >= 540) { // 5:00 PM
+                if (this.state.minutesElapsed >= 480) { // 1:00 PM
                     this.endGame();
                 }
                 return;
@@ -1174,7 +1181,7 @@ export class Game {
             }
 
             // Check for end of day
-            if (this.state.minutesElapsed >= 540) { // 5:00 PM
+            if (this.state.minutesElapsed >= 480) { // 1:00 PM
                 this.endGame();
             }
         } catch (e) {
@@ -1677,7 +1684,7 @@ export class Game {
         this.ui.summary.customers.textContent = this.state.stats.customersServed;
         this.ui.summary.tips.textContent = `$${this.state.stats.tipsEarned.toFixed(2)}`;
 
-        this.switchScreen('summary');
+        this.switchScreen('summary', true); // Silent switch to avoid "beep"
     }
 
     handleRelax() {

@@ -119,36 +119,32 @@ body.dark-mode .hud-horizontal {
     width: 32px;
     height: 32px;
     display: inline-block;
+    background-image: url('../assets/hud_icons.png');
     background-repeat: no-repeat;
-    background-size: contain;
+    background-size: 500% 100%;
     image-rendering: pixelated;
     filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
     transform: scale(1.2);
 }
 
 .icon-player {
-    background-image: url('../assets/icon_player.png');
-    background-position: center;
+    background-position: 0% 0;
 }
 
 .icon-clock {
-    background-image: url('../assets/icon_clock.png');
-    background-position: center;
+    background-position: 25% 0;
 }
 
 .icon-cash {
-    background-image: url('../assets/icon_cash.png');
-    background-position: center;
+    background-position: 50% 0;
 }
 
 .icon-rep {
-    background-image: url('../assets/icon_rep.png');
-    background-position: center;
+    background-position: 75% 0;
 }
 
 .icon-pantry {
-    background-image: url('../assets/icon_pantry.png');
-    background-position: center;
+    background-position: 100% 0;
 }
 
 .weather-icon {
