@@ -18,6 +18,15 @@
     - [x] Map screen navigation.
     - [x] Animated weather GIFs.
     - [x] Customer portrait hover tooltip.
+- **Fixes & Polish (Nov 29)**:
+    - [x] Removed debug mode requirement.
+    - [x] Enhanced rainy weather overlay.
+    - [x] Implemented money-based upgrade requirements.
+    - [x] Removed Day Complete beep.
+    - [x] New pixel art HUD icons (larger).
+    - [x] Dynamic weather icons.
+    - [x] Customer avatars (Student, Hipster, etc.).
+    - [x] Regenerated Barista avatar.
 
 ## Upcoming Priorities (Phase 3)
 - **Recipe Expansion**:
