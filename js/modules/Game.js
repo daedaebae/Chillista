@@ -28,6 +28,7 @@ export class Game {
                 customersServed: 0,
                 tipsEarned: 0,
                 dailyEarnings: 0,
+                cumulativeEarnings: 0, // Total money earned across all days
                 reputation: 0
             },
             weather: 'sunny', // sunny, rainy
@@ -722,11 +723,6 @@ export class Game {
     }
 
     setDebugOption(option, value) {
-        if (!this.state.debug.enabled) {
-            this.log("Enable Debug Mode first", 'error');
-            return;
-        }
-
         this.state.debug[option] = value;
 
         // Handle specific options
@@ -761,19 +757,11 @@ export class Game {
     }
 
     debugForceWeather(type) {
-        if (!this.state.debug.enabled) {
-            this.log("Enable Debug Mode first", 'error');
-            return;
-        }
         this.setWeather(type);
         this.log(`Weather forced to ${type}`, 'system');
     }
 
     debugSpawnCustomer() {
-        if (!this.state.debug.enabled) {
-            this.log("Enable Debug Mode first", 'error');
-            return;
-        }
         if (this.state.currentCustomer) {
             this.log("Customer already present", 'error');
             return;
@@ -783,10 +771,6 @@ export class Game {
     }
 
     debugAddCash(amount) {
-        if (!this.state.debug.enabled) {
-            this.log("Enable Debug Mode first", 'error');
-            return;
-        }
         this.state.cash += amount;
         this.updateHUD();
         this.log(`Added $${amount}`, 'success');
@@ -1488,6 +1472,7 @@ export class Game {
         this.state.stats.customersServed++;
         this.state.stats.tipsEarned += tip;
         this.state.stats.dailyEarnings += total;
+        this.state.stats.cumulativeEarnings += total; // Track total earnings across all days
 
         // Reputation logic
         let repChange = 0;
@@ -1577,8 +1562,8 @@ export class Game {
             'FILTERS': { key: 'filters', cost: 0.05, name: 'Paper Filters' }, // $0.05 per filter
             'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' },
             'UPGRADE_GRINDER': { key: 'fastGrinder', cost: 50.00, name: 'Fast Grinder', type: 'upgrade' },
-            'UPGRADE_MATCHA': { key: 'matchaSet', cost: 200.00, name: 'Matcha Set', type: 'upgrade', minTime: 120, minRep: 5 },
-            'UPGRADE_ESPRESSO': { key: 'espressoMachine', cost: 500.00, name: 'Espresso Machine', type: 'upgrade', minTime: 240, minRep: 15 }
+            'UPGRADE_MATCHA': { key: 'matchaSet', cost: 200.00, name: 'Matcha Set', type: 'upgrade', minEarnings: 300, minRep: 5 },
+            'UPGRADE_ESPRESSO': { key: 'espressoMachine', cost: 500.00, name: 'Espresso Machine', type: 'upgrade', minEarnings: 1000, minRep: 15 }
         };
 
         const itemKey = args[1];
@@ -1591,9 +1576,9 @@ export class Game {
 
         // Check upgrade requirements
         if (item.type === 'upgrade') {
-            if (item.minTime && this.state.minutesElapsed < item.minTime) {
-                const hoursNeeded = Math.ceil((item.minTime - this.state.minutesElapsed) / 60);
-                this.log(`${item.name} unlocks after ${hoursNeeded} more hour(s) of gameplay`, 'error');
+            if (item.minEarnings && this.state.stats.cumulativeEarnings < item.minEarnings) {
+                const needed = item.minEarnings - this.state.stats.cumulativeEarnings;
+                this.log(`${item.name} unlocks after earning $${needed.toFixed(2)} more (total: $${item.minEarnings})`, 'error');
                 this.audio.playError();
                 return;
             }
@@ -1650,7 +1635,6 @@ export class Game {
     endGame() {
         this.log("========================================", 'system');
         this.log(`Day ends. You made $${this.state.stats.dailyEarnings.toFixed(2)}`, 'success');
-        this.audio.playSuccess();
 
         // Show summary screen
         this.ui.summary.earnings.textContent = `$${this.state.stats.dailyEarnings.toFixed(2)}`;
