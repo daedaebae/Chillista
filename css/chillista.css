@@ -121,8 +121,8 @@ body.dark-mode .hud-horizontal {
     display: inline-block;
     background-image: url('../assets/hud_icons.png');
     background-repeat: no-repeat;
-    background-size: 160px 32px;
-    /* 5 icons * 32px */
+    background-size: 500% 100%;
+    /* 5 icons */
     image-rendering: pixelated;
     filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
     transform: scale(1.2);
@@ -130,23 +130,23 @@ body.dark-mode .hud-horizontal {
 }
 
 .icon-player {
-    background-position: 0 0;
+    background-position: 0% 0;
 }
 
 .icon-clock {
-    background-position: -32px 0;
+    background-position: 25% 0;
 }
 
 .icon-cash {
-    background-position: -64px 0;
+    background-position: 50% 0;
 }
 
 .icon-rep {
-    background-position: -96px 0;
+    background-position: 75% 0;
 }
 
 .icon-pantry {
-    background-position: -128px 0;
+    background-position: 100% 0;
 }
 
 .weather-icon {
@@ -499,8 +499,10 @@ body.dark-mode .controls-area {
 }
 
 #coffee-controls {
-    grid-template-columns: repeat(4, 1fr);
-    /* 4 columns for 2 rows (8 buttons total) */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
 }
 
 .control-group.hidden {
@@ -1592,7 +1594,7 @@ body.dark-mode .dialogue-box {
     }
 
     .control-group {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: 0.6rem;
         max-width: 100%;
     }
