@@ -119,34 +119,36 @@ body.dark-mode .hud-horizontal {
     width: 32px;
     height: 32px;
     display: inline-block;
-    background-image: url('../assets/hud_icons.png');
     background-repeat: no-repeat;
-    background-size: 500% 100%;
-    /* 5 icons */
+    background-size: contain;
     image-rendering: pixelated;
     filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
     transform: scale(1.2);
-    /* Make them slightly larger as requested */
 }
 
 .icon-player {
-    background-position: 0% 0;
+    background-image: url('../assets/icon_player.png');
+    background-position: center;
 }
 
 .icon-clock {
-    background-position: 25% 0;
+    background-image: url('../assets/icon_clock.png');
+    background-position: center;
 }
 
 .icon-cash {
-    background-position: 50% 0;
+    background-image: url('../assets/icon_cash.png');
+    background-position: center;
 }
 
 .icon-rep {
-    background-position: 75% 0;
+    background-image: url('../assets/icon_rep.png');
+    background-position: center;
 }
 
 .icon-pantry {
-    background-position: 100% 0;
+    background-image: url('../assets/icon_pantry.png');
+    background-position: center;
 }
 
 .weather-icon {
@@ -1221,44 +1223,38 @@ body.dark-mode .dialogue-box {
         0 0 20px rgba(210, 180, 140, 0.3);
     background-image: url('../assets/customer_avatars.png');
     background-repeat: no-repeat;
-    background-size: 600% 100%;
-    /* 6 avatars */
-    background-position: 0 0;
+    background-size: cover;
+    /* Temporary fix for non-sprite image */
+    background-position: center;
     /* Default */
     image-rendering: pixelated;
 }
 
-/* Customer Sprite Positions */
+/* Customer Sprite Positions - Disabled until sprite sheet is fixed
 .customer-0 {
     background-position: 0% 0;
 }
 
-/* Default */
 .customer-1 {
     background-position: 20% 0;
 }
 
-/* Student */
 .customer-2 {
     background-position: 40% 0;
 }
 
-/* Hipster */
 .customer-3 {
     background-position: 60% 0;
 }
 
-/* Tourist */
 .customer-4 {
     background-position: 80% 0;
 }
 
-/* Regular */
 .customer-5 {
     background-position: 100% 0;
 }
-
-/* Critic */
+*/
 
 .avatar.barista {
     transform: translateX(-20px);
