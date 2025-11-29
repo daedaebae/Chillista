@@ -48,7 +48,7 @@
 
                 <!-- Weather Indicator -->
                 <div id="weather-indicator" class="hud-item" title="Current Weather">
-                    <img id="weather-icon" src="assets/weather_sunny.gif" alt="Weather" class="weather-icon">
+                    <img id="weather-icon" src="assets/weather_sunny.png" alt="Weather" class="weather-icon">
                 </div>
             </div>
 
@@ -72,13 +72,14 @@
                 </div>
                 <div class="character-area">
                     <img src="assets/pixel_barista.png" id="barista-avatar" class="avatar barista" alt="Barista">
-                    <img id="customer-portrait" class="avatar customer" alt="Customer" style="opacity: 0;">
-
-                    <div id="customer-info-panel" class="customer-info-panel hidden">
-                        <h2 id="customer-name">Guest</h2>
-                        <div class="stats-row">
-                            <div id="patience-meter">Patience: 100%</div>
-                            <div id="satisfaction-meter" class="hidden">Mood: 😐</div>
+                    <div class="customer-wrapper">
+                        <img id="customer-portrait" class="avatar customer" alt="Customer" style="opacity: 0;">
+                        <div id="customer-info-panel" class="customer-info-panel">
+                            <h2 id="customer-name">Guest</h2>
+                            <div class="stats-row">
+                                <div id="patience-meter">Patience: 100%</div>
+                                <div id="satisfaction-meter">Mood: 😐</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -419,7 +420,74 @@
             </div>
 
             <div class="menu-group">
+                <button class="btn nav" style="width: 100%; background-color: #6c757d;" onclick="game.toggleDebugMenu()">🐛 Debug Menu</button>
+            </div>
+
+            <div class="menu-group">
                 <button class="btn nav" style="width: 100%" onclick="game.toggleMenu()">Exit Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Menu Overlay -->
+    <div id="debug-menu-overlay" class="menu-overlay hidden">
+        <div class="coffee-menu">
+            <button class="close-btn" onclick="game.toggleDebugMenu()">×</button>
+            <h2>🐛 Debug Menu</h2>
+
+            <div class="menu-group">
+                <label>
+                    <input type="checkbox" id="debug-enabled" onchange="game.setDebugEnabled(this.checked)">
+                    Enable Debug Mode
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <label>
+                    <input type="checkbox" id="debug-weather-disabled" onchange="game.setDebugOption('weatherDisabled', this.checked)">
+                    Disable Weather Effects
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <label>
+                    <input type="checkbox" id="debug-customer-arrival-disabled" onchange="game.setDebugOption('customerArrivalDisabled', this.checked)">
+                    Disable Customer Arrivals
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <label>
+                    <input type="checkbox" id="debug-time-paused" onchange="game.setDebugOption('timePaused', this.checked)">
+                    Pause Time
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <label>
+                    <input type="checkbox" id="debug-infinite-resources" onchange="game.setDebugOption('infiniteResources', this.checked)">
+                    Infinite Resources
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.debugForceWeather('sunny')">Force Sunny Weather</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.debugForceWeather('rainy')">Force Rainy Weather</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.debugSpawnCustomer()">Spawn Customer</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn action" style="width: 100%" onclick="game.debugAddCash(100)">Add $100</button>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn nav" style="width: 100%" onclick="game.toggleDebugMenu()">Close Debug Menu</button>
             </div>
         </div>
     </div>

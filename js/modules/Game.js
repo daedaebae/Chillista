@@ -38,7 +38,14 @@ export class Game {
             },
             unlockedLocations: ['cart'],
             darkModeUnlocked: false, // Dark mode unlock state
-            darkModeEnabled: false // Dark mode toggle state
+            darkModeEnabled: false, // Dark mode toggle state
+            debug: {
+                enabled: false,
+                weatherDisabled: false,
+                customerArrivalDisabled: false,
+                timePaused: false,
+                infiniteResources: false
+            }
         };
 
         this.ui = {
@@ -67,6 +74,7 @@ export class Game {
                 park: document.getElementById('node-park')
             },
             weatherOverlay: document.getElementById('weather-overlay'),
+            weatherIcon: document.getElementById('weather-icon'),
             summary: {
                 earnings: document.getElementById('summary-earnings'),
                 customers: document.getElementById('summary-customers'),
@@ -91,6 +99,60 @@ export class Game {
 
         // Initialize the game (show name modal or load saved game)
         this.init();
+        
+        // Setup customer portrait touch/click handlers
+        this.setupCustomerPortraitTouch();
+    }
+
+    consumeResource(resource, amount) {
+        // Helper function to consume resources, respecting infinite resources debug option
+        if (this.state.debug && this.state.debug.infiniteResources) {
+            return true; // Always succeed if infinite resources enabled
+        }
+        if (this.state.inventory[resource] < amount) {
+            return false; // Not enough resources
+        }
+        this.state.inventory[resource] -= amount;
+        this.trackResourceUsage(resource, amount); // Track for statistics
+        return true; // Successfully consumed
+    }
+
+    setupCustomerPortraitTouch() {
+        // Add click/touch handler for customer portrait to toggle info panel on mobile
+        if (this.ui.customerPortrait && !this.ui.customerPortrait.hasAttribute('data-touch-setup')) {
+            this.ui.customerPortrait.setAttribute('data-touch-setup', 'true');
+            
+            this.ui.customerPortrait.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panel = this.ui.customerInfoPanel;
+                if (panel && this.state.currentCustomer) {
+                    // Toggle on mobile, show on hover for desktop
+                    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+                        // Mobile device - toggle panel
+                        panel.classList.toggle('show-on-touch');
+                    }
+                }
+            });
+            
+            // Also handle touch events for better mobile support
+            let touchStartTime = 0;
+            this.ui.customerPortrait.addEventListener('touchstart', (e) => {
+                touchStartTime = Date.now();
+            });
+            
+            this.ui.customerPortrait.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const touchDuration = Date.now() - touchStartTime;
+                // Only toggle if it was a quick tap (not a long press)
+                if (touchDuration < 300) {
+                    const panel = this.ui.customerInfoPanel;
+                    if (panel && this.state.currentCustomer) {
+                        panel.classList.toggle('show-on-touch');
+                    }
+                }
+            });
+        }
     }
 
     setUIScale(value) {
@@ -295,9 +357,16 @@ export class Game {
                 // Just ensure visual state matches
                 if (this.state.weather === 'rainy') {
                     this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
-                    this.ui.weatherOverlay.style.opacity = '1';
+                    this.ui.weatherOverlay.style.opacity = '0.3';
+                    if (this.ui.weatherIcon) {
+                        this.ui.weatherIcon.src = 'assets/weather_rainy.png';
+                    }
                 } else {
+                    this.ui.weatherOverlay.className = 'weather-overlay';
                     this.ui.weatherOverlay.style.opacity = '0';
+                    if (this.ui.weatherIcon) {
+                        this.ui.weatherIcon.src = 'assets/weather_sunny.png';
+                    }
                 }
             }
 
@@ -339,15 +408,28 @@ export class Game {
                 return;
             }
             this.applyDialogueEffect({ type: 'reputation', value: 1, satisfaction: 5 });
-            // Customer responses to small talk
-            const responses = [
-                "Lovely weather we're having!",
-                "I really like the vibe here.",
-                "It's been a long week.",
-                "Your coffee is the best in town.",
-                "Thanks for chatting with me!",
-                "This place is so cozy."
-            ];
+            
+            // Context-aware responses based on game state
+            let responses = [];
+            
+            if (this.state.weather === 'rainy') {
+                responses = [
+                    "Lovely to have a warm drink on a rainy day!",
+                    "The rain makes coffee taste even better.",
+                    "Thanks for brightening up my gloomy day.",
+                    "Your coffee warms my soul on days like this."
+                ];
+            } else {
+                responses = [
+                    "Lovely weather we're having!",
+                    "I really like the vibe here.",
+                    "It's been a long week, this helps!",
+                    "Your coffee is the best in town.",
+                    "Thanks for chatting with me!",
+                    "This place is so cozy."
+                ];
+            }
+            
             const response = responses[Math.floor(Math.random() * responses.length)];
             this.dialogue.show([`${this.state.currentCustomer.name}: "${response}"`]);
             this.hideDialogueChoices();
@@ -361,10 +443,10 @@ export class Game {
             }
             const success = this.applyDialogueEffect({ type: 'upsell', chance: 0.4, value: 3, satisfaction: 2 });
             if (success) {
-                const responses = ["Ooh, that looks delicious! I'll take one.", "Sure, why not?", "You twisted my arm!"];
+                const responses = ["Ooh, that looks delicious! I'll take one.", "Sure, why not?", "You twisted my arm!", "Actually, yes, I'll treat myself!"];
                 this.dialogue.show([`${this.state.currentCustomer.name}: "${responses[Math.floor(Math.random() * responses.length)]}"`]);
             } else {
-                const responses = ["No thanks, just the drink.", "I'm watching my calories.", "Maybe next time."];
+                const responses = ["No thanks, just the drink.", "I'm watching my calories.", "Maybe next time.", "Not today, thanks though!"];
                 this.dialogue.show([`${this.state.currentCustomer.name}: "${responses[Math.floor(Math.random() * responses.length)]}"`]);
             }
             this.hideDialogueChoices();
@@ -462,52 +544,62 @@ export class Game {
     applyDialogueEffect(effect) {
         if (!effect) return;
 
+        const customer = this.state.currentCustomer;
+        let feedbackMessages = [];
+
         // Apply satisfaction change if present
-        if (effect.satisfaction && this.state.currentCustomer) {
-            this.state.currentCustomer.satisfaction += effect.satisfaction;
+        if (effect.satisfaction && customer) {
+            customer.satisfaction += effect.satisfaction;
             // Clamp between 0-100
-            this.state.currentCustomer.satisfaction = Math.max(0, Math.min(100, this.state.currentCustomer.satisfaction));
+            customer.satisfaction = Math.max(0, Math.min(100, customer.satisfaction));
 
             // Show feedback based on satisfaction change
             if (effect.satisfaction > 8) {
-                this.log("Customer seems very happy! 😊", 'success');
+                feedbackMessages.push("Customer seems very happy! 😊");
+                this.audio.playChime();
             } else if (effect.satisfaction > 0) {
-                this.log("Customer is pleased.", 'success');
+                feedbackMessages.push("Customer is pleased.");
+                this.audio.playChime();
             } else if (effect.satisfaction < -5) {
-                this.log("Customer looks annoyed... 😞", 'error');
+                feedbackMessages.push("Customer looks annoyed... 😞");
+                this.audio.playError();
+            } else if (effect.satisfaction < 0) {
+                feedbackMessages.push("Customer seems a bit put off.");
+                this.audio.playError();
             }
         }
 
         switch (effect.type) {
             case 'reputation':
                 this.state.stats.reputation += effect.value;
-                this.log(`${effect.value > 0 ? '+' : ''}${effect.value} Rep`, 'success');
+                feedbackMessages.push(`+${effect.value} Rep (Total: ${this.state.stats.reputation})`);
                 break;
             case 'patience':
-                if (this.state.currentCustomer) {
-                    this.state.currentCustomer.patience += effect.value;
-                    this.log(`${effect.value > 0 ? '+' : ''}${effect.value} Patience`, 'success');
+                if (customer) {
+                    customer.patience += effect.value;
+                    feedbackMessages.push(`+${effect.value} Patience`);
                 }
                 break;
             case 'tips':
                 this.state.stats.tipsEarned += effect.value;
                 this.state.cash += effect.value;
-                this.log(`Got a $${effect.value} tip!`, 'success');
+                feedbackMessages.push(`Got a $${effect.value} tip! (Total: $${this.state.cash.toFixed(2)})`);
                 this.audio.playChime();
                 break;
             case 'upsell':
                 if (Math.random() < effect.chance) {
                     this.state.cash += effect.value;
                     this.state.stats.dailyEarnings += effect.value;
-                    this.log(`Upsell successful! +$${effect.value}`, 'success');
+                    feedbackMessages.push(`Upsell successful! +$${effect.value}`);
                     this.audio.playChime();
                     return true;
                 } else {
-                    this.log("Upsell failed.", 'error');
-                    if (this.state.currentCustomer) {
-                        this.state.currentCustomer.patience -= 10;
-                        this.state.currentCustomer.satisfaction -= 5; // Failed upsell hurts satisfaction
+                    feedbackMessages.push("Upsell attempt failed - customer not interested");
+                    if (customer) {
+                        customer.patience -= 10;
+                        customer.satisfaction -= 5;
                     }
+                    this.audio.playError();
                     return false;
                 }
                 break;
@@ -515,6 +607,12 @@ export class Game {
                 this.handleCustomDialogueAction(effect.action);
                 break;
         }
+        
+        // Log all feedback messages
+        feedbackMessages.forEach(msg => {
+            this.log(msg, effect.satisfaction > 0 ? 'success' : effect.satisfaction < 0 ? 'error' : 'system');
+        });
+        
         this.updateHUD();
     }
 
@@ -522,12 +620,18 @@ export class Game {
         switch (action) {
             case 'refill_offer':
                 this.log("Offered free refill. Customer is happy!", 'success');
-                if (this.state.currentCustomer) this.state.currentCustomer.patience += 30;
+                if (this.state.currentCustomer) {
+                    this.state.currentCustomer.patience += 30;
+                    this.state.currentCustomer.satisfaction += 10;
+                }
                 break;
             case 'music_compliment':
-                this.log("Vibing with the customer.", 'system');
+                this.log("Vibing with the customer. +3 Rep", 'system');
                 this.state.stats.reputation += 3;
                 this.audio.playSuccess();
+                if (this.state.currentCustomer) {
+                    this.state.currentCustomer.satisfaction += 5;
+                }
                 break;
             case 'photo_op':
                 this.log("Posed for a photo. +5 Rep!", 'success');
@@ -558,6 +662,135 @@ export class Game {
         }
 
         this.audio.playAction();
+    }
+
+    toggleDebugMenu() {
+        const debugMenu = document.getElementById('debug-menu-overlay');
+        const isOpening = debugMenu.classList.contains('hidden');
+        debugMenu.classList.toggle('hidden');
+
+        if (isOpening) {
+            // Update checkboxes to match current debug state
+            const enabledCheckbox = document.getElementById('debug-enabled');
+            const weatherCheckbox = document.getElementById('debug-weather-disabled');
+            const customerCheckbox = document.getElementById('debug-customer-arrival-disabled');
+            const timeCheckbox = document.getElementById('debug-time-paused');
+            const resourcesCheckbox = document.getElementById('debug-infinite-resources');
+
+            if (enabledCheckbox) enabledCheckbox.checked = this.state.debug.enabled;
+            if (weatherCheckbox) weatherCheckbox.checked = this.state.debug.weatherDisabled;
+            if (customerCheckbox) customerCheckbox.checked = this.state.debug.customerArrivalDisabled;
+            if (timeCheckbox) timeCheckbox.checked = this.state.debug.timePaused;
+            if (resourcesCheckbox) resourcesCheckbox.checked = this.state.debug.infiniteResources;
+        }
+
+        this.audio.playAction();
+    }
+
+    setDebugEnabled(enabled) {
+        this.state.debug.enabled = enabled;
+        if (!enabled) {
+            // Disable all debug options when debug mode is turned off
+            this.state.debug.weatherDisabled = false;
+            this.state.debug.customerArrivalDisabled = false;
+            this.state.debug.timePaused = false;
+            this.state.debug.infiniteResources = false;
+            
+            // Update checkboxes
+            const weatherCheckbox = document.getElementById('debug-weather-disabled');
+            const customerCheckbox = document.getElementById('debug-customer-arrival-disabled');
+            const timeCheckbox = document.getElementById('debug-time-paused');
+            const resourcesCheckbox = document.getElementById('debug-infinite-resources');
+            
+            if (weatherCheckbox) weatherCheckbox.checked = false;
+            if (customerCheckbox) customerCheckbox.checked = false;
+            if (timeCheckbox) timeCheckbox.checked = false;
+            if (resourcesCheckbox) resourcesCheckbox.checked = false;
+            
+            // Restore weather if it was disabled
+            if (this.state.weather === 'rainy') {
+                this.setWeather('rainy');
+            }
+            
+            // Resume time if it was paused
+            if (this.clockInterval === null && !this.state.debug.timePaused) {
+                this.startClock();
+            }
+        }
+        this.saveGame();
+        this.log(`Debug mode ${enabled ? 'enabled' : 'disabled'}`, 'system');
+    }
+
+    setDebugOption(option, value) {
+        if (!this.state.debug.enabled) {
+            this.log("Enable Debug Mode first", 'error');
+            return;
+        }
+        
+        this.state.debug[option] = value;
+        
+        // Handle specific options
+        if (option === 'timePaused') {
+            if (value) {
+                if (this.clockInterval) {
+                    clearInterval(this.clockInterval);
+                    this.clockInterval = null;
+                }
+                this.log("Time paused", 'system');
+            } else {
+                this.startClock();
+                this.log("Time resumed", 'system');
+            }
+        } else if (option === 'weatherDisabled') {
+            if (value) {
+                // Force sunny weather
+                this.setWeather('sunny');
+                this.log("Weather effects disabled", 'system');
+            } else {
+                // Restore current weather
+                this.setWeather(this.state.weather);
+                this.log("Weather effects enabled", 'system');
+            }
+        } else if (option === 'customerArrivalDisabled') {
+            this.log(`Customer arrivals ${value ? 'disabled' : 'enabled'}`, 'system');
+        } else if (option === 'infiniteResources') {
+            this.log(`Infinite resources ${value ? 'enabled' : 'disabled'}`, 'system');
+        }
+        
+        this.saveGame();
+    }
+
+    debugForceWeather(type) {
+        if (!this.state.debug.enabled) {
+            this.log("Enable Debug Mode first", 'error');
+            return;
+        }
+        this.setWeather(type);
+        this.log(`Weather forced to ${type}`, 'system');
+    }
+
+    debugSpawnCustomer() {
+        if (!this.state.debug.enabled) {
+            this.log("Enable Debug Mode first", 'error');
+            return;
+        }
+        if (this.state.currentCustomer) {
+            this.log("Customer already present", 'error');
+            return;
+        }
+        this.generateCustomer();
+        this.log("Customer spawned", 'success');
+    }
+
+    debugAddCash(amount) {
+        if (!this.state.debug.enabled) {
+            this.log("Enable Debug Mode first", 'error');
+            return;
+        }
+        this.state.cash += amount;
+        this.updateHUD();
+        this.log(`Added $${amount}`, 'success');
+        this.saveGame();
     }
 
     setMusicVolume(val) {
@@ -700,25 +933,24 @@ export class Game {
             // Rep
             if (this.ui.rep) this.ui.rep.textContent = this.state.stats.reputation;
 
-            // Customer Display
-            // Customer Display
+            // Customer Display - Panel is always in DOM, shown on hover via CSS
             if (this.ui.customerInfoPanel) {
                 if (this.state.currentCustomer) {
                     const c = this.state.currentCustomer;
                     const satisfactionEmoji = this.getSatisfactionEmoji(c.satisfaction);
 
-                    this.ui.customerInfoPanel.classList.remove('hidden');
+                    // Panel visibility is controlled by CSS hover, just update content
                     if (this.ui.customerName) this.ui.customerName.textContent = `${c.name} (${c.personality})`;
 
                     if (this.ui.patienceMeter) {
                         this.ui.patienceMeter.textContent = `Patience: ${Math.round(c.patience)}%`;
                         // Color code patience
                         if (c.patience < 30) this.ui.patienceMeter.style.color = 'var(--error-color)';
-                        else this.ui.patienceMeter.style.color = 'var(--highlight-color)';
+                        else if (c.patience < 50) this.ui.patienceMeter.style.color = '#ffa500';
+                        else this.ui.patienceMeter.style.color = 'var(--success-color)';
                     }
 
                     if (this.ui.satisfactionMeter) {
-                        this.ui.satisfactionMeter.classList.remove('hidden');
                         this.ui.satisfactionMeter.textContent = `Mood: ${satisfactionEmoji} (${Math.round(c.satisfaction)}%)`;
                     }
 
@@ -729,8 +961,6 @@ export class Game {
                             <div>Order: ${c.order}</div>
                         `;
                     }
-                } else {
-                    this.ui.customerInfoPanel.classList.add('hidden');
                 }
             }
 
@@ -738,28 +968,52 @@ export class Game {
             if (this.ui.inventory) {
                 const inv = this.state.inventory;
                 const suggestions = this.getShoppingSuggestions();
+                const usage = this.state.resourceUsage || {};
 
-                // Inventory Grid
+                // Get usage stats for display
+                const getUsageDisplay = (resource) => {
+                    if (usage[resource]) {
+                        return ` (used: ${usage[resource].used})`;
+                    }
+                    return '';
+                };
+
+                // Inventory Grid with enhanced information
                 this.ui.inventory.innerHTML = `
-                    <div class="inventory-item" id="inv-coffee_beans">
+                    <div class="inventory-item" id="inv-beans_standard">
                         <span class="inventory-icon">🫘</span>
-                        <span class="inventory-name">Beans</span>
-                        <span class="inventory-amount">${inv.coffee_beans}g</span>
+                        <span class="inventory-name">Standard Beans</span>
+                        <span class="inventory-amount">${inv.beans_standard}g${getUsageDisplay('beans_standard')}</span>
+                    </div>
+                    <div class="inventory-item" id="inv-beans_premium">
+                        <span class="inventory-icon">✨</span>
+                        <span class="inventory-name">Premium Beans</span>
+                        <span class="inventory-amount">${inv.beans_premium}g${getUsageDisplay('beans_premium')}</span>
+                    </div>
+                    <div class="inventory-item" id="inv-water">
+                        <span class="inventory-icon">💧</span>
+                        <span class="inventory-name">Water</span>
+                        <span class="inventory-amount">${inv.water}ml${getUsageDisplay('water')}</span>
                     </div>
                     <div class="inventory-item" id="inv-milk">
                         <span class="inventory-icon">🥛</span>
                         <span class="inventory-name">Milk</span>
-                        <span class="inventory-amount">${inv.milk}ml</span>
+                        <span class="inventory-amount">${inv.milk}ml${getUsageDisplay('milk')}</span>
                     </div>
-                    <div class="inventory-item" id="inv-sugar">
-                        <span class="inventory-icon">🍬</span>
-                        <span class="inventory-name">Sugar</span>
-                        <span class="inventory-amount">${inv.sugar}g</span>
+                    <div class="inventory-item" id="inv-matcha_powder">
+                        <span class="inventory-icon">🍵</span>
+                        <span class="inventory-name">Matcha</span>
+                        <span class="inventory-amount">${inv.matcha_powder}g${getUsageDisplay('matcha_powder')}</span>
                     </div>
                     <div class="inventory-item" id="inv-cups">
                         <span class="inventory-icon">🥤</span>
                         <span class="inventory-name">Cups</span>
-                        <span class="inventory-amount">${inv.cups}</span>
+                        <span class="inventory-amount">${inv.cups}${getUsageDisplay('cups')}</span>
+                    </div>
+                    <div class="inventory-item" id="inv-filters">
+                        <span class="inventory-icon">📄</span>
+                        <span class="inventory-name">Filters</span>
+                        <span class="inventory-amount">${inv.filters}${getUsageDisplay('filters')}</span>
                     </div>
                 `;
 
@@ -880,9 +1134,23 @@ export class Game {
 
     advanceTime(minutes) {
         try {
+            // Skip time advancement if paused in debug mode
+            if (this.state.debug && this.state.debug.timePaused) {
+                return;
+            }
+            
             this.state.minutesElapsed += minutes;
             this.updateHUD();
             this.checkCustomerPatience(minutes);
+
+            // Skip customer arrival if disabled in debug mode
+            if (this.state.debug && this.state.debug.customerArrivalDisabled) {
+                // Check for end of day
+                if (this.state.minutesElapsed >= 540) { // 5:00 PM
+                    this.endGame();
+                }
+                return;
+            }
 
             // Weather affects customer arrival rate
             let arrivalChance = 0.4; // Base chance (40% per minute)
@@ -994,11 +1262,10 @@ export class Game {
             switch (cmd) {
                 case 'GRIND':
                     if (step !== 0) return;
-                    if (this.state.inventory.beans_premium < 18) {
+                    if (!this.consumeResource('beans_premium', 18)) {
                         this.log("Need Premium Beans!", 'error');
                         return;
                     }
-                    this.state.inventory.beans_premium -= 18;
                     this.state.brewingState.step = 1;
                     this.log("Ground 18g for Espresso.", 'success');
                     this.audio.playAction();
@@ -1011,22 +1278,20 @@ export class Game {
                     break;
                 case 'PULL_SHOT':
                     if (step !== 2) return;
-                    if (this.state.inventory.water < 50) {
+                    if (!this.consumeResource('water', 50)) {
                         this.log("Need water!", 'error');
                         return;
                     }
-                    this.state.inventory.water -= 50;
                     this.state.brewingState.step = 3;
                     this.log("Pulled a rich shot.", 'success');
                     this.audio.playAction();
                     break;
                 case 'STEAM_MILK':
                     if (step !== 3) return;
-                    if (this.state.inventory.milk < 100) {
+                    if (!this.consumeResource('milk', 100)) {
                         this.log("Need milk!", 'error');
                         return;
                     }
-                    this.state.inventory.milk -= 100;
                     this.state.brewingState.step = 4;
                     this.log("Steamed silky milk.", 'success');
                     this.audio.playAction(); // Hiss sound ideally
@@ -1039,11 +1304,10 @@ export class Game {
                     break;
                 case 'SERVE':
                     if (step !== 5) return;
-                    if (this.state.inventory.cups < 1) {
+                    if (!this.consumeResource('cups', 1)) {
                         this.log("Out of cups!", 'error');
                         return;
                     }
-                    this.state.inventory.cups--;
                     this.trackResourceUsage('cups', 1);
                     this.serveCustomer();
                     break;
@@ -1059,11 +1323,10 @@ export class Game {
             switch (cmd) {
                 case 'SIFT':
                     if (step !== 0) return;
-                    if (this.state.inventory.matcha_powder < 5) {
+                    if (!this.consumeResource('matcha_powder', 5)) {
                         this.log("Need Matcha Powder!", 'error');
                         return;
                     }
-                    this.state.inventory.matcha_powder -= 5;
                     this.trackResourceUsage('matcha_powder', 5);
                     this.state.brewingState.step = 1;
                     this.log("Sifted the matcha powder.", 'success');
@@ -1071,11 +1334,10 @@ export class Game {
                     break;
                 case 'ADD_WATER':
                     if (step !== 1) return;
-                    if (this.state.inventory.water < 100) {
+                    if (!this.consumeResource('water', 100)) {
                         this.log("Need water!", 'error');
                         return;
                     }
-                    this.state.inventory.water -= 100;
                     this.trackResourceUsage('water', 100);
                     this.state.brewingState.step = 2;
                     this.log("Added hot water.", 'success');
@@ -1089,11 +1351,10 @@ export class Game {
                     break;
                 case 'SERVE':
                     if (step !== 3) return;
-                    if (this.state.inventory.cups < 1) {
+                    if (!this.consumeResource('cups', 1)) {
                         this.log("Out of cups!", 'error');
                         return;
                     }
-                    this.state.inventory.cups--;
                     this.serveCustomer();
                     break;
                 default:
@@ -1114,13 +1375,11 @@ export class Game {
                 const type = args[1] ? args[1].toUpperCase() : 'STD';
                 const beanKey = type === 'PRM' ? 'beans_premium' : 'beans_standard';
 
-                if (this.state.inventory[beanKey] < 20) {
+                if (!this.consumeResource(beanKey, 20)) {
                     this.log("Out of beans!", 'error');
                     this.audio.playError();
                     return;
                 }
-
-                this.state.inventory[beanKey] -= 20;
                 this.trackResourceUsage(beanKey, 20);
                 this.state.brewingState.step = 1;
                 this.state.brewingState.beanType = type;
@@ -1138,12 +1397,11 @@ export class Game {
                     this.audio.playError();
                     return;
                 }
-                if (this.state.inventory.water < 200) {
+                if (!this.consumeResource('water', 200)) {
                     this.log("Need water!", 'error');
                     this.audio.playError();
                     return;
                 }
-                this.state.inventory.water -= 200;
                 this.state.brewingState.step = 2;
                 this.log("Added hot water.", 'success');
                 this.audio.playAction();
@@ -1180,11 +1438,10 @@ export class Game {
                     this.audio.playError();
                     return;
                 }
-                if (this.state.inventory.filters < 1) {
+                if (!this.consumeResource('filters', 1)) {
                     this.log("Out of filters!", 'error');
                     return;
                 }
-                this.state.inventory.filters--;
                 this.state.brewingState.step = 4;
                 this.log("Pressed the coffee.", 'success');
                 this.audio.playAction();
@@ -1197,11 +1454,10 @@ export class Game {
                     this.audio.playError();
                     return;
                 }
-                if (this.state.inventory.cups < 1) {
+                if (!this.consumeResource('cups', 1)) {
                     this.log("Out of cups!", 'error');
                     return;
                 }
-                this.state.inventory.cups--;
                 this.serveCustomer();
                 break;
         }
@@ -1402,16 +1658,35 @@ export class Game {
     }
 
     setWeather(type) {
+        // Check if weather is disabled in debug mode
+        if (this.state.debug && this.state.debug.weatherDisabled) {
+            type = 'sunny'; // Force sunny if weather is disabled
+        }
+        
         this.state.weather = type;
         if (this.ui.weatherOverlay) {
             if (type === 'rainy') {
+                this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
                 this.ui.weatherOverlay.style.opacity = '0.3';
-                this.log("It's a rainy day... Fewer customers, but cozy vibes.", 'system');
-                this.log("Customers seem less patient in the rain.", 'system');
+                if (!this.state.debug || !this.state.debug.weatherDisabled) {
+                    this.log("It's a rainy day... Fewer customers, but cozy vibes.", 'system');
+                    this.log("Customers seem less patient in the rain.", 'system');
+                }
             } else if (type === 'sunny') {
+                this.ui.weatherOverlay.className = 'weather-overlay';
                 this.ui.weatherOverlay.style.opacity = '0';
-                this.log("It's a sunny day! Perfect weather for coffee.", 'system');
-                this.log("Customers are in a great mood today!", 'success');
+                if (!this.state.debug || !this.state.debug.weatherDisabled) {
+                    this.log("It's a sunny day! Perfect weather for coffee.", 'system');
+                    this.log("Customers are in a great mood today!", 'success');
+                }
+            }
+        }
+        // Update weather icon
+        if (this.ui.weatherIcon) {
+            if (type === 'rainy') {
+                this.ui.weatherIcon.src = 'assets/weather_rainy.png';
+            } else if (type === 'sunny') {
+                this.ui.weatherIcon.src = 'assets/weather_sunny.png';
             }
         }
     }
@@ -1546,6 +1821,9 @@ export class Game {
             this.ui.customerPortrait.setAttribute('data-mood', this.state.currentCustomer.getStatusText());
             this.ui.customerPortrait.style.opacity = '1';
 
+            // Add touch support for mobile to show customer info
+            this.setupCustomerPortraitTouch();
+
             // Special Dialogue
             if (specialType === 'critic') {
                 this.dialogue.show([
@@ -1618,44 +1896,114 @@ export class Game {
     }
 
     checkLowStock() {
-        const thresholds = {
-            coffee_beans: 5,
-            milk: 3,
-            sugar: 3,
-            cups: 5,
-            matcha_powder: 5,
-            water: 100
+        // Enhanced thresholds with multiple warning levels
+        const criticalThresholds = {
+            beans_standard: 30,
+            beans_premium: 20,
+            water: 150,
+            milk: 20,
+            matcha_powder: 10,
+            cups: 15,
+            filters: 15
         };
 
-        for (const [resource, amount] of Object.entries(this.state.inventory)) {
-            if (thresholds[resource] && amount <= thresholds[resource]) {
-                const el = document.getElementById(`inv-${resource}`);
-                if (el) el.classList.add('resource-low');
+        const warningThresholds = {
+            beans_standard: 80,
+            beans_premium: 50,
+            water: 300,
+            milk: 60,
+            matcha_powder: 30,
+            cups: 40,
+            filters: 30
+        };
 
-                // Only warn once per day or session? For now, just warn.
-                // To prevent spam, maybe check if we already warned?
-                // Simplified: just log if critical.
-                if (amount === 0) {
-                    // this.log(`Out of ${resource}!`, 'error'); // Can be spammy
-                }
+        const outOfStockResources = [];
+        const criticalResources = [];
+
+        for (const [resource, amount] of Object.entries(this.state.inventory)) {
+            const el = document.getElementById(`inv-${resource}`);
+            if (!el) continue;
+
+            // Remove all old status classes
+            el.classList.remove('resource-low', 'resource-critical', 'resource-warning');
+
+            if (amount === 0) {
+                el.classList.add('resource-critical');
+                outOfStockResources.push(resource);
+            } else if (criticalThresholds[resource] && amount <= criticalThresholds[resource]) {
+                el.classList.add('resource-critical');
+                criticalResources.push(resource);
+            } else if (warningThresholds[resource] && amount <= warningThresholds[resource]) {
+                el.classList.add('resource-warning');
             } else {
-                const el = document.getElementById(`inv-${resource}`);
-                if (el) el.classList.remove('resource-low');
+                el.classList.remove('resource-critical', 'resource-warning');
             }
+        }
+
+        // Log warnings for critical issues (not too spammy)
+        if (outOfStockResources.length > 0 && !this.state.lastStockWarning) {
+            const names = outOfStockResources.map(r => r.replace(/_/g, ' ')).join(', ');
+            this.log(`⚠️ OUT OF STOCK: ${names}!`, 'error');
+            this.state.lastStockWarning = { resources: outOfStockResources, time: Date.now() };
         }
     }
 
     getShoppingSuggestions() {
         const suggestions = [];
-        const usage = this.state.resourceUsage;
         const inventory = this.state.inventory;
 
-        // Simple logic: if stock < 3 days worth of average usage, suggest buying
-        // For now, hardcoded "safe" levels
-        if (inventory.coffee_beans < 50) suggestions.push({ item: 'Standard Beans', reason: 'Low Stock' });
-        if (inventory.milk < 20) suggestions.push({ item: 'Milk', reason: 'Running Low' });
-        if (inventory.sugar < 20) suggestions.push({ item: 'Sugar', reason: 'Sweetness needed' });
-        if (inventory.cups < 30) suggestions.push({ item: 'Cups', reason: 'Essential' });
+        // Enhanced logic based on resource criticality and usage patterns
+        const criticalThresholds = {
+            beans_standard: 40,
+            beans_premium: 30,
+            water: 200,
+            milk: 30,
+            matcha_powder: 15,
+            cups: 25,
+            filters: 20
+        };
+
+        const warningThresholds = {
+            beans_standard: 100,
+            beans_premium: 60,
+            water: 400,
+            milk: 80,
+            matcha_powder: 40,
+            cups: 60,
+            filters: 40
+        };
+
+        // Check for critical levels first (high priority)
+        for (const [resource, criticalLevel] of Object.entries(criticalThresholds)) {
+            if (inventory[resource] <= criticalLevel) {
+                const name = resource.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                suggestions.push({
+                    item: name,
+                    reason: '🔴 CRITICAL - Buy Now!',
+                    priority: 'critical'
+                });
+            }
+        }
+
+        // Check for warning levels (medium priority)
+        if (suggestions.length < 3) {
+            for (const [resource, warningLevel] of Object.entries(warningThresholds)) {
+                if (inventory[resource] <= warningLevel && inventory[resource] > criticalThresholds[resource]) {
+                    const name = resource.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    suggestions.push({
+                        item: name,
+                        reason: '🟡 Low Stock',
+                        priority: 'warning'
+                    });
+                }
+            }
+        }
+
+        // Sort by priority
+        suggestions.sort((a, b) => {
+            const priorityOrder = { critical: 0, warning: 1 };
+            return priorityOrder[a.priority] - priorityOrder[b.priority];
+        });
 
         return suggestions;
     }

@@ -123,10 +123,26 @@ body.dark-mode .hud-horizontal {
 
 .weather-icon {
     width: 3rem;
-    /* Doubled from 1.5rem */
     height: 3rem;
     image-rendering: pixelated;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) 
+            drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))
+            brightness(1.1) 
+            contrast(1.1);
+    transition: transform 0.3s ease, filter 0.3s ease;
+    border-radius: 50%;
+    background: #e8e8e8;
+    /* Neutral gray background to hide grid */
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.weather-icon:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)) 
+            drop-shadow(0 0 12px rgba(255, 255, 255, 0.5))
+            brightness(1.2) 
+            contrast(1.2);
 }
 
 .hud-value {
@@ -253,27 +269,18 @@ body.dark-mode .hud-horizontal {
 .avatar.customer {
     position: relative;
     cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 10;
 }
 
-.avatar.customer::after {
-    content: attr(data-mood);
-    position: absolute;
-    bottom: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
+.avatar.customer:hover {
+    transform: translateX(20px) scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    z-index: 20;
 }
 
-.avatar.customer:hover::after {
-    opacity: 1;
+.avatar.customer:active {
+    transform: translateX(20px) scale(1.05);
 }
 
 #rep-display {
@@ -573,15 +580,29 @@ body.dark-mode #screen-map {
 
 .customer-info-panel {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
     color: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    border: 2px solid var(--text-color);
-    text-align: right;
-    z-index: 10;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--highlight-color);
+    text-align: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    min-width: 180px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.avatar.customer:hover + .customer-info-panel,
+.customer-info-panel:hover {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(-5px);
 }
 
 .customer-info-panel h2 {
@@ -981,23 +1002,20 @@ body.dark-mode .dialogue-box {
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: auto;
+    pointer-events: none;
+    /* Don't block clicks */
     z-index: 50;
     opacity: 0;
     transition: opacity 1s;
-    cursor: pointer;
 }
 
-.weather-overlay:hover {
-    opacity: 0.6 !important;
-}
-
-.weather-rain {
+.weather-overlay.weather-rain {
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAFElEQVQYV2NkYGD4z4AHMP7//x8A3HgT/4hVwXIAAAAASUVORK5CYII=');
-    /* Simple pixel dot */
+    /* Simple pixel dot pattern */
     background-size: 4px 4px;
     animation: rain 0.5s linear infinite;
     opacity: 0.3;
+    pointer-events: none;
 }
 
 @keyframes rain {
@@ -1111,10 +1129,24 @@ body.dark-mode .dialogue-box {
     height: 120px;
     border: 4px solid #fff;
     border-radius: 50%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background-color: #f5f5f5;
+    /* Neutral light gray background to hide grid */
     object-fit: cover;
     transition: all 0.3s ease;
+    image-rendering: pixelated;
+    /* Keep pixel art crisp */
+}
+
+.avatar.barista {
+    background-color: #e8e8e8;
+    /* Slightly different neutral background for barista */
+}
+
+.avatar.customer {
+    border-color: var(--highlight-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 
+                0 0 20px rgba(210, 180, 140, 0.3);
 }
 
 .avatar.barista {
@@ -1330,26 +1362,37 @@ body.dark-mode .dialogue-box {
     }
 }
 
+/* Customer Wrapper for hover positioning */
+.customer-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     body {
-        font-size: 14px;
+        font-size: 16px;
+        /* Slightly larger for better readability */
     }
 
     .game-container {
         height: 100vh;
         overflow: hidden;
+        border: none;
+        /* Remove border on mobile */
+        max-width: 100%;
     }
 
     /* HUD Adjustments */
     .hud-horizontal {
-        padding: 0.4rem;
-        gap: 0.4rem;
+        padding: 0.5rem;
+        gap: 0.5rem;
         overflow-x: auto;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         /* Firefox */
+        min-height: 50px;
     }
 
     .hud-horizontal::-webkit-scrollbar {
@@ -1358,30 +1401,91 @@ body.dark-mode .dialogue-box {
     }
 
     .hud-item {
-        padding: 0.2rem 0.4rem;
+        padding: 0.3rem 0.5rem;
         flex-shrink: 0;
+        min-width: fit-content;
+    }
+
+    .hud-icon {
+        font-size: 1.5rem;
+        /* Larger icons on mobile */
     }
 
     .hud-value {
-        font-size: 0.9rem;
+        font-size: 1rem;
+    }
+
+    .weather-icon {
+        width: 2.5rem;
+        height: 2.5rem;
     }
 
     /* Visual Area */
     .visual-area {
         flex-grow: 1;
         min-height: 0;
-        /* Allow shrinking */
+        padding-bottom: 1rem;
+    }
+
+    .character-area {
+        padding: 0 1rem;
+        align-items: flex-end;
+    }
+
+    .avatar {
+        width: 100px;
+        height: 100px;
+        /* Slightly smaller on mobile */
+    }
+
+    .avatar.barista {
+        transform: translateX(-10px);
+    }
+
+    .avatar.customer {
+        transform: translateX(10px);
+    }
+
+    .avatar.customer:hover,
+    .avatar.customer:active {
+        transform: translateX(10px) scale(1.05);
+        /* Smaller scale on mobile */
+    }
+
+    .avatar.customer {
+        border-width: 3px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), 
+                    0 0 15px rgba(210, 180, 140, 0.2);
+    }
+
+    .customer-info-panel {
+        top: -90px;
+        min-width: 160px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+
+    .customer-info-panel h2 {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+
+    .stats-row {
+        font-size: 0.95rem;
+        gap: 4px;
     }
 
     /* Controls */
     .controls-area {
-        padding: 0.5rem;
+        padding: 0.6rem;
         min-height: auto;
+        border-top-width: 3px;
     }
 
     .control-group {
         grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
+        gap: 0.6rem;
+        max-width: 100%;
     }
 
     #coffee-controls {
@@ -1390,32 +1494,135 @@ body.dark-mode .dialogue-box {
     }
 
     .btn {
-        min-height: 44px;
-        /* Touch target size */
-        font-size: 1rem;
-        padding: 0.3rem;
+        min-height: 48px;
+        /* Larger touch target */
+        font-size: 1.1rem;
+        padding: 0.4rem 0.3rem;
+        border-width: 2px;
+    }
+
+    /* Game Log */
+    .game-log {
+        height: 150px;
+        padding: 0.6rem;
+        font-size: 1.1rem;
+    }
+
+    .log-entry {
+        font-size: 1.1rem;
+        padding: 0.4rem;
+        margin-bottom: 0.25rem;
     }
 
     /* Modals */
     .coffee-menu {
         width: 95%;
+        max-width: 400px;
         max-height: 90vh;
         overflow-y: auto;
         padding: 1.5rem;
+        transform: rotate(0deg);
+        /* No rotation on mobile */
     }
 
     .shop-items {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 1rem;
+        padding: 1rem;
+    }
+
+    .shop-item {
+        padding: 0.8rem;
     }
 
     .map-grid {
         gap: 1rem;
+        padding: 1rem;
     }
 
     .map-node {
         width: 100%;
-        height: 100px;
+        height: 110px;
+        padding: 0.5rem;
+    }
+
+    .map-node .icon {
+        font-size: 2.5rem;
+    }
+
+    /* Inventory Panel */
+    .inventory-panel:not(.hidden) {
+        max-height: 120px;
+        padding: 0.6rem 1rem;
+    }
+
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.6rem;
+        padding: 0.4rem;
+    }
+
+    .inventory-item {
+        padding: 0.4rem;
+    }
+
+    /* Brewing Station */
+    .brewing-station {
+        width: 70px;
+        height: 120px;
+    }
+
+    /* Dialogue Box */
+    .dialogue-box {
+        font-size: 1.3rem;
+        padding: 0.8rem;
+        height: auto;
+        min-height: 70px;
+    }
+
+    .dialogue-choices {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .dialogue-btn {
+        width: 100%;
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    /* Toggle Buttons */
+    .music-toggle,
+    .map-toggle {
+        width: 44px;
+        height: 44px;
+        bottom: 10px;
+        font-size: 1.4rem;
+    }
+
+    .map-toggle {
+        right: 60px;
+    }
+}
+
+/* Touch-friendly hover states for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .avatar.customer:active ~ .customer-info-panel,
+    .customer-wrapper:active .customer-info-panel {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: translateX(-50%) translateY(-5px) !important;
+    }
+    
+    /* Show customer info on tap */
+    .customer-wrapper {
+        position: relative;
+    }
+    
+    .customer-info-panel.show-on-touch {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(-5px);
     }
 }
 
