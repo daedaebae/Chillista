@@ -27,8 +27,8 @@
     - [x] Dynamic weather icons.
     - [x] Customer avatars (Student, Hipster, etc.).
     - [x] Regenerated Barista avatar.
-    - [ ] **TODO**: Regenerate all pixel art assets as transparent PNGs (currently JPEGs).
-    - [ ] **TODO**: Generate missing HUD icons (Rep, Pantry).
+    - [ ] **TODO (BLOCKED)**: Regenerate all pixel art assets as transparent PNGs (currently JPEGs with baked-in checkers).
+    - [ ] **TODO (BLOCKED)**: Generate missing HUD icons (Rep, Pantry).
 
 ## Upcoming Priorities (Phase 3)
 - **Recipe Expansion**:
