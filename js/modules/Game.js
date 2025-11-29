@@ -1550,19 +1550,31 @@ export class Game {
         const matchaControls = document.getElementById('matcha-controls');
         const espressoControls = document.getElementById('espresso-controls');
 
+        const btnServeCoffee = document.getElementById('btn-serve-coffee');
+        const btnServeMatcha = document.getElementById('btn-serve-matcha');
+        const btnServeEspresso = document.getElementById('btn-serve-espresso');
+
         coffeeControls.classList.add('hidden');
         matchaControls.classList.add('hidden');
         espressoControls.classList.add('hidden');
 
+        // Hide serve buttons by default
+        if (btnServeCoffee) btnServeCoffee.classList.add('hidden');
+        if (btnServeMatcha) btnServeMatcha.classList.add('hidden');
+        if (btnServeEspresso) btnServeEspresso.classList.add('hidden');
+
         if (mode === 'matcha') {
             matchaControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station matcha-mode step-${step}`;
+            if (step === 3 && btnServeMatcha) btnServeMatcha.classList.remove('hidden');
         } else if (mode === 'espresso') {
             espressoControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station espresso-mode step-${step}`;
+            if (step === 5 && btnServeEspresso) btnServeEspresso.classList.remove('hidden');
         } else {
             coffeeControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station ${classes[step]}`;
+            if (step === 4 && btnServeCoffee) btnServeCoffee.classList.remove('hidden');
         }
 
         // Update park station if it exists
