@@ -27,26 +27,29 @@
                 </div>
 
                 <!-- Cash -->
-                <div class="hud-item" title="Your current funds">
+                <div class="hud-item" data-tooltip="Your current funds">
                     <span class="hud-icon icon-cash"></span>
                     <span id="cash-display" class="hud-value">$50.00</span>
                 </div>
 
                 <!-- Reputation -->
-                <div class="hud-item" title="Your reputation level">
+                <!-- Reputation -->
+                <div class="hud-item" data-tooltip="Your reputation level">
                     <span class="hud-icon icon-rep"></span>
                     <span id="rep-display" class="hud-value">0</span>
                 </div>
 
                 <!-- Inventory Toggle -->
-                <div class="hud-item hud-inventory-toggle" title="Click to view inventory (Tab)"
+                <!-- Inventory Toggle -->
+                <div class="hud-item hud-inventory-toggle" data-tooltip="Click to view inventory (Tab)"
                     onclick="game.toggleInventory()">
                     <span class="hud-icon icon-pantry"></span>
                     <span class="hud-value">Inventory</span>
                 </div>
 
                 <!-- Weather Indicator -->
-                <div id="weather-indicator" class="hud-item" title="Current Weather">
+                <!-- Weather Indicator -->
+                <div id="weather-indicator" class="hud-item" data-tooltip="Current Weather">
                     <img id="weather-icon" src="assets/weather_sunny.png" alt="Weather" class="weather-icon">
                 </div>
             </div>
@@ -73,6 +76,10 @@
                     </div>
                 </div>
                 <div id="brewing-station" class="brewing-station state-empty">
+                    <div class="kettle hidden"></div>
+                    <div class="beans-bag hidden"></div>
+                    <div class="hand-grinder hidden"></div>
+                    <div class="coffee-cup hidden"></div>
                     <div class="plunger"></div>
                     <div class="chamber">
                         <div class="contents"></div>
@@ -80,15 +87,24 @@
                 </div>
 
                 <div id="matcha-station" class="brewing-station matcha-station hidden">
-                    <div class="whisk"></div>
+                    <div class="kettle hidden"></div>
+                    <div class="tea-powder hidden"></div>
+                    <div class="matcha-cup hidden"></div>
+                    <div class="whisk hidden"></div>
                     <div class="bowl">
                         <div class="contents"></div>
                     </div>
                 </div>
 
                 <div id="espresso-station" class="brewing-station espresso-station hidden">
-                    <div class="portafilter"></div>
-                    <div class="cup">
+                    <div class="electric-grinder hidden"></div>
+                    <div class="beans-hopper hidden"></div>
+                    <div class="espresso-machine">
+                        <div class="group-head"></div>
+                        <div class="portafilter hidden"></div>
+                        <div class="drip-tray"></div>
+                    </div>
+                    <div class="cup hidden">
                         <div class="contents"></div>
                     </div>
                 </div>
@@ -607,7 +623,8 @@
             return false;
         };
     </script>
-    <script type="module" src="js/main.js"></script>
+    <div id="custom-tooltip" class="custom-tooltip hidden"></div>
+    <script type="module" src="js/chillista.js"></script>
     <!-- <script src="main.js"></script> -->
 
 </body>

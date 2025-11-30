@@ -1379,74 +1379,332 @@
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Custom Tooltip */
+.custom-tooltip {
+    position: absolute;
+    background: rgba(40, 30, 20, 0.95);
+    color: #fffaf0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: var(--font-ui);
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid #8b5a2b;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    transform: translate(10px, 10px);
+    /* Offset from cursor */
+}
+
+.custom-tooltip.hidden {
+    opacity: 0;
+}
+
+/* --- Detailed Station Visuals --- */
+
+/* Common Elements */
+.kettle {
+    width: 60px;
+    height: 50px;
+    background: #cfd8dc;
+    /* Silver */
+    border-radius: 10px 10px 5px 5px;
+    position: absolute;
+    top: -60px;
+    left: -80px;
+    border: 2px solid #546e7a;
+    transition: transform 0.5s ease;
+    z-index: 10;
+}
+
+.kettle::before {
+    /* Spout */
+    content: '';
+    position: absolute;
+    right: -15px;
+    top: 10px;
+    width: 20px;
+    height: 8px;
+    background: #cfd8dc;
+    transform: rotate(-30deg);
+    border: 2px solid #546e7a;
+}
+
+.kettle::after {
+    /* Handle */
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 5px;
+    width: 15px;
+    height: 30px;
+    border: 3px solid #37474f;
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+}
+
+.beans-bag {
+    width: 40px;
+    height: 50px;
+    background: #795548;
+    /* Brown paper */
+    position: absolute;
+    top: -60px;
+    right: -70px;
+    border-radius: 5px;
+    border: 2px solid #3e2723;
+}
+
+/* Aeropress Specific */
+.hand-grinder {
+    width: 30px;
+    height: 60px;
+    background: #b0bec5;
+    position: absolute;
+    top: -70px;
+    right: 20px;
+    border: 2px solid #455a64;
+    border-radius: 5px;
+}
+
+.hand-grinder::before {
+    /* Handle */
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 40px;
+    height: 5px;
+    background: #37474f;
+    transform: translateX(-10%);
+}
+
+.coffee-cup {
+    width: 50px;
+    height: 40px;
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 0 0 15px 15px;
+    position: absolute;
+    bottom: 10px;
+    right: -60px;
+}
+
 /* Matcha Station */
 .matcha-station .bowl {
     width: 120px;
     height: 80px;
     background: #e8f5e9;
-    /* Light green ceramic */
     border: 3px solid #2e7d32;
     border-radius: 10px 10px 40px 40px;
     position: relative;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
 }
 
 .matcha-station .whisk {
     width: 40px;
     height: 60px;
     background: #dce775;
-    /* Bamboo color */
+    /* Bamboo */
     border-radius: 4px;
-    margin-bottom: 5px;
-    transition: transform 0.2s ease;
+    position: absolute;
+    top: -70px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid #9e9d24;
+}
+
+.tea-powder {
+    width: 40px;
+    height: 30px;
+    background: #2e7d32;
+    /* Green tin */
+    position: absolute;
+    top: -50px;
+    right: -60px;
+    border-radius: 50%;
+    border: 2px solid #1b5e20;
 }
 
 /* Espresso Station */
-.espresso-station .cup {
-    width: 60px;
-    height: 50px;
-    background: #fff;
-    border: 2px solid #3e2723;
-    border-radius: 0 0 15px 15px;
+.espresso-station {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+}
+
+.espresso-machine {
+    width: 140px;
+    height: 160px;
+    background: #eceff1;
+    /* Metal body */
+    border: 3px solid #37474f;
+    border-radius: 10px;
     position: relative;
-    overflow: hidden;
-    margin-top: 20px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.group-head {
+    width: 60px;
+    height: 20px;
+    background: #37474f;
+    margin-top: 40px;
+    border-radius: 0 0 5px 5px;
+}
+
+.drip-tray {
+    width: 100%;
+    height: 20px;
+    background: #cfd8dc;
+    border-top: 2px solid #90a4ae;
+    margin-top: auto;
+    border-radius: 0 0 8px 8px;
+}
+
+.electric-grinder {
+    width: 50px;
+    height: 100px;
+    background: #3e2723;
+    border-radius: 5px;
+    position: relative;
+    border: 2px solid #2d1e18;
+}
+
+.beans-hopper {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.5);
+    /* Glass */
+    position: absolute;
+    top: -35px;
+    left: 5px;
+    border-radius: 5px 5px 20px 20px;
+    border: 2px solid #a1887f;
 }
 
 .espresso-station .portafilter {
-    width: 100px;
-    height: 30px;
+    width: 80px;
+    height: 20px;
     background: #3e2723;
-    /* Handle/Body */
     border-radius: 4px;
-    margin-bottom: 10px;
-    position: relative;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.espresso-station .portafilter::before {
-    /* Metal filter part */
-    content: '';
     position: absolute;
-    bottom: -10px;
-    left: 20px;
-    width: 40px;
-    height: 15px;
-    background: #b0bec5;
-    /* Silver */
-    border-radius: 0 0 20px 20px;
+    top: 60px;
+    /* Under group head */
+    left: 30px;
+    z-index: 5;
+    transform-origin: left center;
 }
 
 .espresso-station .portafilter::after {
-    /* Handle extension */
+    /* Handle */
     content: '';
     position: absolute;
     right: -40px;
-    top: 8px;
-    width: 50px;
-    height: 14px;
+    top: 2px;
+    width: 40px;
+    height: 12px;
     background: #5d4037;
     border-radius: 0 10px 10px 0;
+}
+
+.espresso-station .cup {
+    width: 40px;
+    height: 30px;
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 0 0 10px 10px;
+    position: absolute;
+    bottom: 25px;
+    /* On drip tray */
+    left: 50px;
+}
+
+/* Animations */
+@keyframes pour-anim {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(-45deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.pouring {
+    animation: pour-anim 2s ease-in-out infinite;
+}
+
+@keyframes grind-anim {
+    0% {
+        transform: translateX(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateX(-2px) rotate(-2deg);
+    }
+
+    75% {
+        transform: translateX(2px) rotate(2deg);
+    }
+
+    100% {
+        transform: translateX(0) rotate(0deg);
+    }
+}
+
+.grinding {
+    animation: grind-anim 0.2s linear infinite;
+}
+
+@keyframes whisk-anim {
+    0% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    25% {
+        transform: translateX(-55%) rotate(-10deg);
+    }
+
+    75% {
+        transform: translateX(-45%) rotate(10deg);
+    }
+
+    100% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+}
+
+.whisking {
+    animation: whisk-anim 0.1s linear infinite;
+}
+
+@keyframes fill-anim {
+    from {
+        height: 0%;
+    }
+
+    to {
+        height: 80%;
+    }
+}
+
+.filling .contents {
+    background: #3e2723;
+    /* Coffee color */
+    width: 100%;
+    bottom: 0;
+    position: absolute;
+    animation: fill-anim 3s linear forwards;
 }
