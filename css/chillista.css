@@ -126,29 +126,36 @@ body.dark-mode .hud-horizontal {
     transform: scale(1.2);
 }
 
-.icon-player {
-    background-image: url('../assets/icon_player.png');
-    background-position: center;
-}
-
-.icon-clock {
-    background-image: url('../assets/icon_clock.png');
-    background-position: center;
-}
-
-.icon-cash {
-    background-image: url('../assets/icon_cash.png');
-    background-position: center;
-}
-
-.icon-rep {
-    background-image: url('../assets/icon_rep.png');
-    background-position: center;
-}
-
+.icon-player,
+.icon-clock,
+.icon-cash,
+.icon-rep,
 .icon-pantry {
-    background-image: url('../assets/icon_pantry.png');
-    background-position: center;
+    background-image: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.icon-player::before {
+    content: '☕';
+}
+
+.icon-clock::before {
+    content: '⏰';
+}
+
+.icon-cash::before {
+    content: '💵';
+}
+
+.icon-rep::before {
+    content: '⭐';
+}
+
+.icon-pantry::before {
+    content: '🎒';
 }
 
 .weather-icon {
@@ -1165,21 +1172,6 @@ body.dark-mode .dialogue-box {
 /* Resource Warnings */
 .resource-low {
     color: var(--error-color) !important;
-    animation: pulse-warning 1s infinite;
-}
-
-@keyframes pulse-warning {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-
-    100% {
-        opacity: 1;
-    }
 }
 
 /* Summary Screen */
