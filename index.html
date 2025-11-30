@@ -79,6 +79,20 @@
                     </div>
                 </div>
 
+                <div id="matcha-station" class="brewing-station matcha-station hidden">
+                    <div class="whisk"></div>
+                    <div class="bowl">
+                        <div class="contents"></div>
+                    </div>
+                </div>
+
+                <div id="espresso-station" class="brewing-station espresso-station hidden">
+                    <div class="portafilter"></div>
+                    <div class="cup">
+                        <div class="contents"></div>
+                    </div>
+                </div>
+
                 <div id="dialogue-box" class="dialogue-box hidden">
                     <div id="dialogue-text" class="dialogue-text"></div>
                     <div id="dialogue-choices" class="dialogue-choices hidden"></div>
@@ -106,7 +120,7 @@
                     <button class="btn action" onclick="game.handleInput('STIR')">Stir</button>
                     <button class="btn action" onclick="game.handleInput('PLUNGE')">Plunge</button>
                     <button id="btn-serve-coffee" class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
-                    <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
+                    <button class="btn nav hidden" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
                     <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
                     <button class="btn nav" onclick="game.handleInput('SHOP')">Shop</button>
                 </div>
@@ -497,13 +511,12 @@
             <div style="margin-bottom: 2rem;">
                 <p>Developed by</p>
                 <h3 style="color: var(--accent-color);">Durf</h3>
-                <href="https: //github.com/daedaebae" target="_blank">GitHub</href>
             </div>
 
             <div class="menu-group">
                 <a href="https://github.com/daedaebae" target="_blank" class="btn action"
                     style="display: block; text-decoration: none; margin-bottom: 1rem;">
-                    ❤️ Support the Developer
+                    ❤️ Support the Developer - GitHub
                 </a>
             </div>
 

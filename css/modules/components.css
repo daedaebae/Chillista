@@ -679,6 +679,7 @@
     outline: none;
     border-radius: 5px;
     -webkit-appearance: none;
+    appearance: none;
     border: 1px solid #a1887f;
 }
 
@@ -1376,4 +1377,76 @@
 .shop-item:hover {
     transform: translateY(-3px) scale(1.01);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Matcha Station */
+.matcha-station .bowl {
+    width: 120px;
+    height: 80px;
+    background: #e8f5e9;
+    /* Light green ceramic */
+    border: 3px solid #2e7d32;
+    border-radius: 10px 10px 40px 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.matcha-station .whisk {
+    width: 40px;
+    height: 60px;
+    background: #dce775;
+    /* Bamboo color */
+    border-radius: 4px;
+    margin-bottom: 5px;
+    transition: transform 0.2s ease;
+}
+
+/* Espresso Station */
+.espresso-station .cup {
+    width: 60px;
+    height: 50px;
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 0 0 15px 15px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 20px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.espresso-station .portafilter {
+    width: 100px;
+    height: 30px;
+    background: #3e2723;
+    /* Handle/Body */
+    border-radius: 4px;
+    margin-bottom: 10px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.espresso-station .portafilter::before {
+    /* Metal filter part */
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    width: 40px;
+    height: 15px;
+    background: #b0bec5;
+    /* Silver */
+    border-radius: 0 0 20px 20px;
+}
+
+.espresso-station .portafilter::after {
+    /* Handle extension */
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: 8px;
+    width: 50px;
+    height: 14px;
+    background: #5d4037;
+    border-radius: 0 10px 10px 0;
 }

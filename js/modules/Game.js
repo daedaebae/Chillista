@@ -6,6 +6,7 @@ export class Game {
     constructor() {
         this.state = {
             time: '05:00 AM', // Simplified for now, will need minutes
+            day: 1,
             minutesElapsed: 0, // 0 = 8:00 AM, 540 = 5:00 PM
             cash: 50.00,
             inventory: {
@@ -64,6 +65,8 @@ export class Game {
             inventory: document.getElementById('inventory-items'),
             log: document.getElementById('game-log'),
             brewingStation: document.getElementById('brewing-station'),
+            matchaStation: document.getElementById('matcha-station'),
+            espressoStation: document.getElementById('espresso-station'),
             parkBrewingStation: document.getElementById('park-brewing-station'),
             decorations: document.getElementById('decorations-area'),
             customerPortrait: document.getElementById('customer-portrait'),
@@ -380,8 +383,49 @@ export class Game {
         if (mode === 'espresso') modeName = 'Espresso Machine';
 
         this.log(`Switched to ${modeName}.`, 'system');
+
+        // Update Controls
+        const controls = {
+            coffee: document.getElementById('coffee-controls'),
+            matcha: document.getElementById('matcha-controls'),
+            espresso: document.getElementById('espresso-controls')
+        };
+
+        // Hide all first
+        Object.values(controls).forEach(el => el && el.classList.add('hidden'));
+
+        // Show selected
+        if (controls[mode]) controls[mode].classList.remove('hidden');
+
+        // Update Visuals
         this.updateBrewingVisuals();
         this.closeModeMenu();
+    }
+
+    updateBrewingVisuals() {
+        const { mode, step } = this.state.brewingState;
+
+        // Hide all stations first
+        if (this.ui.brewingStation) this.ui.brewingStation.classList.add('hidden');
+        if (this.ui.matchaStation) this.ui.matchaStation.classList.add('hidden');
+        if (this.ui.espressoStation) this.ui.espressoStation.classList.add('hidden');
+
+        // Show active station
+        let activeStation;
+        if (mode === 'coffee') activeStation = this.ui.brewingStation;
+        if (mode === 'matcha') activeStation = this.ui.matchaStation;
+        if (mode === 'espresso') activeStation = this.ui.espressoStation;
+
+        if (activeStation) {
+            activeStation.classList.remove('hidden');
+
+            // Update contents based on step (simplified for now)
+            const contents = activeStation.querySelector('.contents');
+            if (contents) {
+                contents.className = 'contents'; // Reset
+                if (step > 0) contents.classList.add('step-' + step);
+            }
+        }
     }
 
     switchShopTab(tabName) {
@@ -479,6 +523,7 @@ export class Game {
         }
         this.checkModeUnlock(); // Update UI immediately
         this.renderUpgrades(); // Refresh UI
+        this.saveGame(); // Save progress
     }
 
     consumeResource(resource, amount) {
@@ -678,6 +723,15 @@ export class Game {
                 }
             });
         }
+
+        // Attempt to play music immediately (may be blocked by browser)
+        try {
+            this.audio.context.resume().then(() => {
+                this.audio.playMusic();
+            }).catch(e => console.log("Autoplay blocked, waiting for interaction:", e));
+        } catch (e) {
+            console.log("Audio init failed:", e);
+        }
     }
 
     closeIntro() {
@@ -688,7 +742,15 @@ export class Game {
 
             // Unlock audio context on user interaction
             if (this.audio.context.state === 'suspended') {
-                this.audio.context.resume();
+                this.audio.context.resume().then(() => {
+                    if (!this.audio.bgm || this.audio.bgm.paused) {
+                        this.audio.playMusic();
+                    }
+                });
+            } else {
+                if (!this.audio.bgm || this.audio.bgm.paused) {
+                    this.audio.playMusic();
+                }
             }
         }
         this.startFlow();
@@ -1735,11 +1797,19 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'TAMP':
+                    if (step < 1) {
+                        this.log("Grind beans first!", 'error');
+                        return;
+                    }
                     this.state.brewingState.step = 2;
                     this.log("Tamped the grounds firmly.", 'success');
                     this.audio.playAction();
                     break;
                 case 'PULL_SHOT':
+                    if (step < 2) {
+                        this.log("Tamp grounds first!", 'error');
+                        return;
+                    }
                     if (!this.consumeResource('water', 50)) {
                         this.log("Need water!", 'error');
                         return;
@@ -1749,6 +1819,10 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'STEAM_MILK':
+                    if (step < 3) {
+                        this.log("Pull shot first!", 'error');
+                        return;
+                    }
                     if (!this.consumeResource('milk', 100)) {
                         this.log("Need milk!", 'error');
                         return;
@@ -1758,6 +1832,10 @@ export class Game {
                     this.audio.playAction(); // Hiss sound ideally
                     break;
                 case 'POUR':
+                    if (step < 4) {
+                        this.log("Steam milk first!", 'error');
+                        return;
+                    }
                     this.state.brewingState.step = 5;
                     this.log("Poured latte art.", 'success');
                     this.audio.playAction();
@@ -1799,6 +1877,10 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'ADD_WATER':
+                    if (step < 1) {
+                        this.log("Sift matcha first!", 'error');
+                        return;
+                    }
                     if (!this.consumeResource('water', 100)) {
                         this.log("Need water!", 'error');
                         return;
@@ -1809,6 +1891,10 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'WHISK':
+                    if (step < 2) {
+                        this.log("Add water first!", 'error');
+                        return;
+                    }
                     this.state.brewingState.step = 3;
                     this.log("Whisked to perfection!", 'success');
                     this.audio.playChime();
@@ -1849,7 +1935,11 @@ export class Game {
                 break;
 
             case 'ADD_WATER':
-                // Removed strict step check
+                if (step < 1) {
+                    this.log("Grind beans first!", 'error');
+                    this.audio.playError();
+                    return;
+                }
                 if (!this.consumeResource('water', 250)) {
                     this.log("Out of water!", 'error');
                     return;
@@ -1860,14 +1950,22 @@ export class Game {
                 break;
 
             case 'STIR':
-                // Removed strict step check
+                if (step < 2) {
+                    this.log("Add water first!", 'error');
+                    this.audio.playError();
+                    return;
+                }
                 this.state.brewingState.step = 3;
                 this.log("Stirred the grounds.", 'system');
                 this.audio.playAction();
                 break;
 
             case 'PLUNGE':
-                // Removed strict step check
+                if (step < 3) {
+                    this.log("Stir first!", 'error');
+                    this.audio.playError();
+                    return;
+                }
                 if (!this.consumeResource('filters', 1)) {
                     this.log("Out of filters!", 'error');
                     return;
@@ -2148,6 +2246,7 @@ export class Game {
         }
     }
     startNewDay() {
+        this.state.day = (this.state.day || 1) + 1;
         this.state.minutesElapsed = 0;
         this.state.stats.dailyEarnings = 0;
         this.state.stats.customersServed = 0;
@@ -2165,6 +2264,7 @@ export class Game {
         this.setWeather(weather);
 
         this.switchScreen('cart');
+        this.saveGame();
     }
     triggerRandomEvent() {
         const events = [

@@ -63,6 +63,32 @@ export class AudioSystem {
     }
     playChime() { this.playTone(880, 'triangle', 0.5); }
 
+    playGrind() {
+        // Low pitch sawtooth for grinding
+        this.playTone(80, 'sawtooth', 1.5);
+        setTimeout(() => this.playTone(90, 'sawtooth', 1.5), 100);
+        setTimeout(() => this.playTone(80, 'sawtooth', 1.5), 200);
+    }
+
+    playPour() {
+        // Sliding pitch to simulate liquid filling
+        if (!this.enabled) return;
+        const osc = this.context.createOscillator();
+        const gain = this.context.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, this.context.currentTime);
+        osc.frequency.linearRampToValueAtTime(800, this.context.currentTime + 1.0);
+
+        const volume = this.sfxVolume * 0.5;
+        gain.gain.setValueAtTime(volume, this.context.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.context.currentTime + 1.0);
+
+        osc.connect(gain);
+        gain.connect(this.context.destination);
+        osc.start();
+        osc.stop(this.context.currentTime + 1.0);
+    }
+
     playMusic() {
         if (!this.bgm) {
             this.playNextTrack();
