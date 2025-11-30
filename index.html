@@ -39,11 +39,10 @@
                 </div>
 
                 <!-- Inventory Toggle -->
-                <div class="hud-item hud-inventory-toggle" title="Click to view inventory details"
+                <div class="hud-item hud-inventory-toggle" title="Click to view inventory (Tab)"
                     onclick="game.toggleInventory()">
                     <span class="hud-icon icon-pantry"></span>
-                    <span class="hud-value">Pantry</span>
-                    <span class="hud-expand">▼</span>
+                    <span class="hud-value">Inventory</span>
                 </div>
 
                 <!-- Weather Indicator -->
@@ -51,17 +50,7 @@
                     <img id="weather-icon" src="assets/weather_sunny.png" alt="Weather" class="weather-icon">
                 </div>
             </div>
-
-            <!-- Expandable Inventory Panel -->
-            <div id="inventory-panel" class="inventory-panel hidden">
-                <div id="inventory-display" class="inventory-grid">
-                    <!-- Populated by JS -->
-                </div>
-                <div id="shopping-suggestions" class="shopping-suggestions hidden">
-                    <h4>📝 Shopping List</h4>
-                    <ul id="suggestion-list"></ul>
-                </div>
-            </div>
+            <!-- End of HUD -->
             <!-- End of HUD -->
 
             <div id="visual-area" class="visual-area">
@@ -128,7 +117,8 @@
                     <button class="btn action" onclick="game.handleInput('ADD_WATER')">Water</button>
                     <button class="btn action" onclick="game.handleInput('WHISK')">Whisk</button>
                     <button id="btn-serve-matcha" class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
-                    <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
+                    <button id="btn-mode-matcha" class="btn nav hidden"
+                        onclick="game.handleInput('SWITCH_MODE')">Mode</button>
                     <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
                 </div>
 
@@ -141,7 +131,8 @@
                     <button class="btn action" onclick="game.handleInput('POUR')">Pour</button>
                     <button id="btn-serve-espresso" class="btn action"
                         onclick="game.handleInput('SERVE')">Serve</button>
-                    <button class="btn nav" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
+                    <button id="btn-mode-espresso" class="btn nav hidden"
+                        onclick="game.handleInput('SWITCH_MODE')">Mode</button>
                     <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
                 </div>
             </footer>
@@ -215,89 +206,118 @@
             </footer>
         </div>
 
-        <div id="screen-shop" class="screen hidden">
-            <div class="shop-header">
-                <h2>Supply Shop</h2>
-                <div class="shop-cash">Funds: <span id="shop-cash-display">$0.00</span></div>
-            </div>
+        <div id="screen-inventory" class="menu-overlay hidden">
+            <div class="coffee-menu inventory-menu">
+                <h2>Inventory</h2>
 
-            <div class="shop-tabs">
-                <button class="tab-btn active" onclick="game.switchShopTab('supplies')">Supplies</button>
-                <button class="tab-btn" onclick="game.switchShopTab('upgrades')">Upgrades</button>
-            </div>
+                <div class="shop-tabs">
+                    <button class="tab-btn active" onclick="game.switchInventoryTab('items')">Items</button>
+                    <button class="tab-btn" onclick="game.switchInventoryTab('stats')">Stats</button>
+                </div>
 
-            <div id="shop-supplies" class="shop-items">
-                <div class="shop-item">
-                    <div class="icon">🫘</div>
-                    <div class="details">
-                        <h3>Standard Beans</h3>
-                        <p>100g for $5</p>
-                    </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY BEANS_STD 100')">Buy</button>
+                <div id="inventory-items" class="inventory-grid">
+                    <!-- Populated by JS -->
                 </div>
-                <div class="shop-item">
-                    <div class="icon">✨</div>
-                    <div class="details">
-                        <h3>Premium Beans</h3>
-                        <p>100g for $10</p>
+
+                <div id="inventory-stats" class="inventory-stats hidden">
+                    <h3>Market Trends</h3>
+                    <div id="market-stats-content">
+                        <!-- Populated by JS -->
                     </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY BEANS_PRM 100')">Buy</button>
+                    <h3>Purchase History</h3>
+                    <ul id="purchase-history-list">
+                        <!-- Populated by JS -->
+                    </ul>
                 </div>
-                <div class="shop-item">
-                    <div class="icon">🥛</div>
-                    <div class="details">
-                        <h3>Fresh Milk</h3>
-                        <p>200ml for $4</p>
-                    </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY MILK 200')">Buy</button>
+
+                <button class="close-btn" onclick="game.toggleInventory()">×</button>
+            </div>
+        </div>
+
+        <div id="screen-shop" class="menu-overlay hidden">
+            <div class="coffee-menu shop-menu">
+                <div class="shop-header">
+                    <h2>Supply Shop</h2>
+                    <div class="shop-cash">Funds: <span id="shop-cash-display">$0.00</span></div>
+                    <button class="close-btn" onclick="game.toggleShop()">×</button>
                 </div>
-                <div class="shop-item">
-                    <div class="icon">💧</div>
-                    <div class="details">
-                        <h3>Fresh Water</h3>
-                        <p>500ml for $2</p>
-                    </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY WATER 500')">Buy</button>
+
+                <div class="shop-tabs">
+                    <button class="tab-btn active" onclick="game.switchShopTab('supplies')">Supplies</button>
+                    <button class="tab-btn" onclick="game.switchShopTab('upgrades')">Upgrades</button>
                 </div>
-                <div class="shop-item">
-                    <div class="icon">🪴</div>
-                    <div class="details">
-                        <h3>Potted Plant</h3>
-                        <p>Cozy vibes. $20</p>
+
+                <div id="shop-supplies" class="shop-items">
+                    <div class="shop-item">
+                        <div class="icon">🫘</div>
+                        <div class="details">
+                            <h3>Standard Beans</h3>
+                            <p>100g for $5</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY BEANS_STD 100')">Buy</button>
                     </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY PLANT')">Buy</button>
+                    <div class="shop-item">
+                        <div class="icon">✨</div>
+                        <div class="details">
+                            <h3>Premium Beans</h3>
+                            <p>100g for $10</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY BEANS_PRM 100')">Buy</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="icon">🥛</div>
+                        <div class="details">
+                            <h3>Fresh Milk</h3>
+                            <p>200ml for $4</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY MILK 200')">Buy</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="icon">💧</div>
+                        <div class="details">
+                            <h3>Fresh Water</h3>
+                            <p>500ml for $2</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY WATER 500')">Buy</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="icon">🪴</div>
+                        <div class="details">
+                            <h3>Potted Plant</h3>
+                            <p>Cozy vibes. $20</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY PLANT')">Buy</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="icon">🍃</div>
+                        <div class="details">
+                            <h3>Matcha Powder</h3>
+                            <p>50g for $10</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY MATCHA 50')">Buy</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="icon">🥤</div>
+                        <div class="details">
+                            <h3>Paper Cups</h3>
+                            <p>50 Pack. $5.00</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY CUPS 50')">Buy</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="icon">📄</div>
+                        <div class="details">
+                            <h3>Filters</h3>
+                            <p>50 Pack. $2.50</p>
+                        </div>
+                        <button class="btn buy" onclick="game.handleInput('BUY FILTERS 50')">Buy</button>
+                    </div>
                 </div>
-                <div class="shop-item">
-                    <div class="icon">🍃</div>
-                    <div class="details">
-                        <h3>Matcha Powder</h3>
-                        <p>50g for $10</p>
-                    </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY MATCHA 50')">Buy</button>
-                </div>
-                <div class="shop-item">
-                    <div class="icon">🥤</div>
-                    <div class="details">
-                        <h3>Paper Cups</h3>
-                        <p>50 Pack. $5.00</p>
-                    </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY CUPS 50')">Buy</button>
-                </div>
-                <div class="shop-item">
-                    <div class="icon">📄</div>
-                    <div class="details">
-                        <h3>Filters</h3>
-                        <p>50 Pack. $2.50</p>
-                    </div>
-                    <button class="btn buy" onclick="game.handleInput('BUY FILTERS 50')">Buy</button>
+
+                <div id="shop-upgrades" class="shop-items hidden">
+                    <!-- Populated by JS -->
                 </div>
             </div>
-
-            <div id="shop-upgrades" class="shop-items hidden">
-                <!-- Populated by JS -->
-            </div>
-
-            <button class="btn nav back-btn" onclick="game.switchScreen('map')">Back to Map</button>
         </div>
 
         <div id="screen-summary" class="screen hidden summary-screen">
@@ -364,6 +384,13 @@
 
             <div class="menu-group">
                 <label>
+                    <input type="checkbox" id="dark-mode-toggle" onchange="game.toggleDarkMode(this.checked)">
+                    Dark Mode
+                </label>
+            </div>
+
+            <div class="menu-group">
+                <label>
                     <input type="checkbox" id="music-enabled" checked onchange="game.toggleMusic(this.checked)">
                     Music Enabled
                 </label>
@@ -414,6 +441,49 @@
 
             <div class="menu-group">
                 <button class="btn nav" style="width: 100%" onclick="game.toggleMenu()">Exit Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="inventory-modal" class="menu-overlay hidden">
+        <div class="coffee-menu" style="width: 500px; max-width: 90vw;">
+            <button class="close-btn" onclick="game.toggleInventory()">×</button>
+            <h2>Inventory</h2>
+            <div id="inventory-display" class="inventory-grid">
+                <!-- Items injected by JS -->
+            </div>
+            <div id="shopping-suggestions" class="shopping-suggestions hidden" style="margin-top: 1rem;">
+                <h4>📝 Shopping List</h4>
+                <ul id="suggestion-list"></ul>
+            </div>
+            <div class="menu-group" style="margin-top: 1rem;">
+                <button class="btn nav" style="width: 100%" onclick="game.toggleInventory()">Close (Tab)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Selection Modal -->
+    <div id="mode-selection-modal" class="menu-overlay hidden">
+        <div class="coffee-menu" style="width: 400px;">
+            <button class="close-btn" onclick="game.closeModeMenu()">×</button>
+            <h2>Select Brewing Mode</h2>
+            <div class="mode-grid">
+                <button class="mode-btn" onclick="game.selectMode('coffee')">
+                    <span class="mode-icon">☕</span>
+                    <span class="mode-name">AeroPress</span>
+                    <span class="mode-desc">Classic & Reliable</span>
+                </button>
+                <button id="mode-btn-matcha" class="mode-btn locked" onclick="game.selectMode('matcha')">
+                    <span class="mode-icon">🍵</span>
+                    <span class="mode-name">Matcha Bowl</span>
+                    <span class="mode-desc">Locked (Buy Kit)</span>
+                </button>
+                <button id="mode-btn-espresso" class="mode-btn locked" onclick="game.selectMode('espresso')">
+                    <span class="mode-icon">⚡</span>
+                    <span class="mode-name">Espresso</span>
+                    <span class="mode-desc">Locked (Buy Machine)</span>
+                </button>
             </div>
         </div>
     </div>

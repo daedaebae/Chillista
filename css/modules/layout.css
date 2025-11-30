@@ -1,0 +1,101 @@
+.game-container {
+    width: 100%;
+    height: 100vh;
+    /* Full height */
+    display: flex;
+    flex-direction: column;
+    border: none;
+    /* Remove border for full immersion */
+    margin: 0;
+    background-color: #fffaf0;
+    overflow: hidden;
+}
+
+.visual-area {
+    flex-grow: 1;
+    position: relative;
+    background-color: #87CEEB;
+    /* Sky blue fallback */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    /* Align items to bottom of visual area */
+    z-index: 1;
+}
+
+.character-area {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Let clicks pass through to background/items if needed */
+}
+
+.decorations-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Map Screen */
+#screen-map {
+    background-color: #e6ccb2;
+    background-image: radial-gradient(#d2b48c 2px, transparent 2px);
+    background-size: 30px 30px;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.map-header h2 {
+    font-size: 2rem;
+    color: var(--text-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.map-node {
+    background: #fff;
+    border: 2px solid var(--text-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 140px;
+}
+
+.map-node:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+}
+
+.map-node .icon {
+    font-size: 2.5rem;
+}
+
+.map-node .name {
+    font-weight: bold;
+    font-size: 1.1rem;
+}

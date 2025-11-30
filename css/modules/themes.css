@@ -1,0 +1,68 @@
+/* Dark Mode - Evening Coffee House Theme */
+body.dark-mode {
+    --bg-color: #2c1810;
+    /* Dark Coffee Brown */
+    --text-color: #f5deb3;
+    /* Wheat/Light Tan */
+    --accent-color: #8b4513;
+    /* Saddle Brown/Mocha */
+    --highlight-color: #6b4423;
+    /* Chestnut Brown */
+    --button-bg: #5d3a1a;
+    /* Dark Brown */
+    --button-hover: #7a4e2a;
+    /* Lighter Brown */
+    --error-color: #ff6b6b;
+    /* Bright Red for visibility */
+    --success-color: #90ee90;
+    /* Light Green for visibility */
+}
+
+body.dark-mode {
+    background-color: #1a0f0a;
+    /* Even darker background */
+}
+
+body.dark-mode .game-container {
+    background-color: var(--bg-color);
+}
+
+body.dark-mode .hud-horizontal {
+    background: linear-gradient(180deg, var(--highlight-color) 0%, #4a2f1a 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode #screen-map {
+    background-color: #3d2817;
+    background-image: radial-gradient(#5d3a1a 2px, transparent 2px);
+}
+
+body.dark-mode .controls-area {
+    background-color: #2c1810;
+}
+
+body.dark-mode .inventory-item:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .mode-btn {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: #e6ccb2;
+    color: #e6ccb2;
+}
+
+body.dark-mode .mode-desc {
+    color: #aaa;
+}
+
+body.dark-mode .log-entry.error {
+    background-color: rgba(255, 107, 107, 0.2);
+}
+
+body.dark-mode .log-entry.success {
+    background-color: rgba(144, 238, 144, 0.2);
+}
+
+body.dark-mode .game-log {
+    background-color: #1a0f0a;
+}

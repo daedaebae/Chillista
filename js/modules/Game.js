@@ -31,6 +31,13 @@ export class Game {
                 cumulativeEarnings: 0, // Total money earned across all days
                 reputation: 0
             },
+            purchaseHistory: [], // Track all purchases
+            marketTrends: {
+                beans_standard: [],
+                beans_premium: [],
+                milk: [],
+                matcha_powder: []
+            },
             weather: 'sunny', // sunny, rainy
             upgrades: [], // List of purchased upgrade IDs
             unlockedLocations: ['cart'],
@@ -54,7 +61,7 @@ export class Game {
             customerName: document.getElementById('customer-name'),
             patienceMeter: document.getElementById('patience-meter'),
             satisfactionMeter: document.getElementById('satisfaction-meter'),
-            inventory: document.getElementById('inventory-display'),
+            inventory: document.getElementById('inventory-items'),
             log: document.getElementById('game-log'),
             brewingStation: document.getElementById('brewing-station'),
             parkBrewingStation: document.getElementById('park-brewing-station'),
@@ -106,6 +113,226 @@ export class Game {
 
         // Setup customer portrait touch/click handlers
         this.setupCustomerPortraitTouch();
+
+        // Global Key Handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault(); // Prevent focus change
+                this.toggleInventory();
+            }
+        });
+
+        // Initial check
+        this.checkModeUnlock();
+    }
+
+    checkModeUnlock() {
+        // Show Mode buttons if any mode upgrade is owned
+        const hasModes = this.state.upgrades.some(u => u.startsWith('mode_'));
+        const modeBtns = document.querySelectorAll('button[onclick="game.handleInput(\'SWITCH_MODE\')"]');
+
+        modeBtns.forEach(btn => {
+            if (hasModes) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        });
+    }
+
+    toggleDarkMode(enabled) {
+        this.state.darkModeEnabled = enabled;
+        if (enabled) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+
+    toggleInventory() {
+        const modal = document.getElementById('screen-inventory');
+        if (modal) {
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                this.switchInventoryTab('items'); // Default to items
+                this.updateInventoryDisplay(); // Ensure fresh data
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+    }
+
+    switchInventoryTab(tabName) {
+        // Update tab buttons
+        const tabs = document.querySelectorAll('#screen-inventory .tab-btn');
+        tabs.forEach(btn => {
+            if (btn.textContent.toLowerCase() === tabName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const items = document.getElementById('inventory-items');
+        const stats = document.getElementById('inventory-stats');
+
+        if (tabName === 'items') {
+            items.classList.remove('hidden');
+            stats.classList.add('hidden');
+        } else {
+            items.classList.add('hidden');
+            stats.classList.remove('hidden');
+            this.renderInventoryStats();
+        }
+    }
+
+    renderInventoryStats() {
+        const historyList = document.getElementById('purchase-history-list');
+        if (historyList) {
+            historyList.innerHTML = '';
+            const recent = this.state.purchaseHistory.slice(-10).reverse(); // Last 10
+            if (recent.length === 0) {
+                historyList.innerHTML = '<li>No purchases yet.</li>';
+            } else {
+                recent.forEach(p => {
+                    const li = document.createElement('li');
+                    li.textContent = `Day ${p.day}: Bought ${p.quantity} ${p.item} for $${p.cost.toFixed(2)}`;
+                    historyList.appendChild(li);
+                });
+            }
+        }
+
+        // Market Trends (Placeholder for now)
+        const trends = document.getElementById('market-stats-content');
+        if (trends) {
+            trends.innerHTML = '<p>Market prices are stable.</p>';
+        }
+    }
+
+    handleBuyCommand(args) {
+        // Format: BUY [ITEM] [QUANTITY]
+        if (args.length < 3) return;
+
+        const itemMap = {
+            'BEANS_STD': { key: 'beans_standard', cost: 0.05, name: 'Std Beans' }, // $0.05 per gram
+            'BEANS_PRM': { key: 'beans_premium', cost: 0.10, name: 'Prm Beans' }, // $0.10 per gram
+            'MILK': { key: 'milk', cost: 0.02, name: 'Milk' }, // $0.02 per ml
+            'MILK_OAT': { key: 'milk_oat', cost: 0.06, name: 'Oat-Milk' }, // $0.02 per ml
+            'WATER': { key: 'water', cost: 0.004, name: 'Water' }, // $2 for 500ml
+            'MATCHA': { key: 'matcha_powder', cost: 0.20, name: 'Matcha' }, // $10 for 50g
+            'CUPS': { key: 'cups', cost: 0.10, name: 'Cups' }, // $5 for 50
+            'FILTERS': { key: 'filters', cost: 0.05, name: 'Filters' }, // $2.50 for 50
+            'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' }
+        };
+
+        const itemKey = args[1];
+        const quantity = parseInt(args[2]);
+
+        if (!itemMap[itemKey]) {
+            this.log("Unknown item.", 'error');
+            return;
+        }
+
+        if (isNaN(quantity) && itemMap[itemKey].type !== 'decoration') {
+            this.log("Invalid quantity.", 'error');
+            return;
+        }
+
+        const item = itemMap[itemKey];
+        const totalCost = item.type === 'decoration' ? item.cost : item.cost * quantity;
+
+        if (this.state.cash >= totalCost) {
+            this.state.cash -= totalCost;
+
+            if (item.type === 'decoration') {
+                this.state.decorations.push(item.key);
+                this.renderDecorations();
+                this.log(`Bought a ${item.name}! Cozy vibes increased.`, 'success');
+            } else {
+                this.state.inventory[item.key] += quantity;
+                this.log(`Bought ${quantity} ${item.name}`, 'success');
+
+                // Track purchase
+                if (!this.state.purchaseHistory) this.state.purchaseHistory = [];
+                this.state.purchaseHistory.push({
+                    day: this.state.day || 1, // Assuming day is tracked, default to 1
+                    item: item.name,
+                    quantity: quantity,
+                    cost: totalCost,
+                    timestamp: Date.now()
+                });
+            }
+
+            this.audio.playAction();
+            this.updateHUD(); // Update cash display in shop
+            this.advanceTime(5); // Buying takes 5 minutes
+        } else {
+            this.log(`Need $${totalCost.toFixed(2)}`, 'error');
+            this.audio.playError();
+        }
+    }
+
+    openModeMenu() {
+        const modal = document.getElementById('mode-selection-modal');
+        if (!modal) return;
+
+        // Update locked states
+        const btnMatcha = document.getElementById('mode-btn-matcha');
+        const btnEspresso = document.getElementById('mode-btn-espresso');
+
+        if (btnMatcha) {
+            if (this.state.upgrades.includes('mode_matcha')) {
+                btnMatcha.classList.remove('locked');
+                btnMatcha.querySelector('.mode-desc').textContent = 'Traditional & Zen';
+            } else {
+                btnMatcha.classList.add('locked');
+                btnMatcha.querySelector('.mode-desc').textContent = 'Locked (Buy Kit)';
+            }
+        }
+
+        if (btnEspresso) {
+            if (this.state.upgrades.includes('mode_espresso')) {
+                btnEspresso.classList.remove('locked');
+                btnEspresso.querySelector('.mode-desc').textContent = 'Rich & Intense';
+            } else {
+                btnEspresso.classList.add('locked');
+                btnEspresso.querySelector('.mode-desc').textContent = 'Locked (Buy Machine)';
+            }
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    closeModeMenu() {
+        const modal = document.getElementById('mode-selection-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    selectMode(mode) {
+        if (this.state.brewingState.step !== 0) {
+            this.log("Finish current brew first.", 'error');
+            this.closeModeMenu();
+            return;
+        }
+
+        // Check locks
+        if (mode === 'matcha' && !this.state.upgrades.includes('mode_matcha')) {
+            this.audio.playError();
+            return;
+        }
+        if (mode === 'espresso' && !this.state.upgrades.includes('mode_espresso')) {
+            this.audio.playError();
+            return;
+        }
+
+        this.state.brewingState.mode = mode;
+        let modeName = 'AeroPress';
+        if (mode === 'matcha') modeName = 'Matcha Bowl';
+        if (mode === 'espresso') modeName = 'Espresso Machine';
+
+        this.log(`Switched to ${modeName}.`, 'system');
+        this.updateBrewingVisuals();
+        this.closeModeMenu();
     }
 
     switchShopTab(tabName) {
@@ -201,7 +428,7 @@ export class Game {
             // Unlock mode logic will go here or be checked dynamically
             this.log(`Unlocked ${upgrade.name} mode!`, 'success');
         }
-
+        this.checkModeUnlock(); // Update UI immediately
         this.renderUpgrades(); // Refresh UI
     }
 
@@ -282,8 +509,9 @@ export class Game {
             timestamp: Date.now()
         };
         localStorage.setItem('chillista_save', JSON.stringify(saveData));
-        this.log("Game Saved.", 'system');
-        this.audio.playSuccess();
+        // Silent save - no log or audio
+        // this.log("Game Saved.", 'system');
+        // this.audio.playSuccess();
 
         // Visual feedback - show a brief success message
         const saveBtn = document.querySelector('button[onclick="game.saveGame()"]');
@@ -352,6 +580,7 @@ export class Game {
 
                 // Restore complex objects if needed (e.g., Date objects, though we use simple numbers)
                 this.log("Welcome back! Game loaded.", 'system');
+                this.checkModeUnlock(); // Update UI based on upgrades
                 return true;
             } catch (e) {
                 console.error("Failed to load save:", e);
@@ -951,6 +1180,20 @@ export class Game {
         }
     }
 
+    toggleShop() {
+        const shop = document.getElementById('screen-shop');
+        if (!shop) return;
+
+        if (shop.classList.contains('hidden')) {
+            shop.classList.remove('hidden');
+            this.renderUpgrades();
+            this.audio.playAction();
+        } else {
+            shop.classList.add('hidden');
+            this.audio.playAction();
+        }
+    }
+
     showHelp() {
         this.toggleMenu(); // Close menu
         this.dialogue.show([
@@ -1022,16 +1265,7 @@ export class Game {
         }
     }
 
-    toggleInventory() {
-        const panel = document.getElementById('inventory-panel');
-        const toggle = document.querySelector('.hud-inventory-toggle');
 
-        if (panel && toggle) {
-            panel.classList.toggle('hidden');
-            toggle.classList.toggle('active');
-            this.audio.playAction();
-        }
-    }
 
     updateHUD() {
         try {
@@ -1306,6 +1540,49 @@ export class Game {
         }
     }
 
+    updateBrewingVisuals() {
+        const mode = this.state.brewingState.mode;
+        const step = this.state.brewingState.step;
+
+        // Hide all controls first
+        const coffeeControls = document.getElementById('coffee-controls');
+        const matchaControls = document.getElementById('matcha-controls');
+        const espressoControls = document.getElementById('espresso-controls');
+
+        if (coffeeControls) coffeeControls.classList.add('hidden');
+        if (matchaControls) matchaControls.classList.add('hidden');
+        if (espressoControls) espressoControls.classList.add('hidden');
+
+        // Get Serve Buttons
+        const btnServeCoffee = document.getElementById('btn-serve-coffee');
+        const btnServeMatcha = document.getElementById('btn-serve-matcha');
+        const btnServeEspresso = document.getElementById('btn-serve-espresso');
+
+        // Reset Serve Buttons (Always visible, but maybe styled differently if we wanted,
+        // but for now we just ensure they are NOT hidden)
+        if (btnServeCoffee) btnServeCoffee.classList.remove('hidden', 'disabled');
+        if (btnServeMatcha) btnServeMatcha.classList.remove('hidden', 'disabled');
+        if (btnServeEspresso) btnServeEspresso.classList.remove('hidden', 'disabled');
+
+        const classes = ['state-idle', 'state-ground', 'state-water', 'state-stirred', 'state-plunged'];
+
+        if (mode === 'matcha') {
+            matchaControls.classList.remove('hidden');
+            this.ui.brewingStation.className = `brewing-station matcha-mode step-${step}`;
+        } else if (mode === 'espresso') {
+            espressoControls.classList.remove('hidden');
+            this.ui.brewingStation.className = `brewing-station espresso-mode step-${step}`;
+        } else {
+            coffeeControls.classList.remove('hidden');
+            this.ui.brewingStation.className = `brewing-station ${classes[step]}`;
+        }
+
+        // Update park station if it exists
+        if (this.ui.parkBrewingStation) {
+            this.ui.parkBrewingStation.className = this.ui.brewingStation.className;
+        }
+    }
+
     handleInput(commandStr) {
         const cmdParts = commandStr.trim().toUpperCase().split(' ');
         const cmd = cmdParts[0];
@@ -1328,7 +1605,7 @@ export class Game {
                 this.handleDialogueCommand(cmd);
                 return;
             case 'SHOP':
-                this.switchScreen('shop');
+                this.toggleShop();
                 return;
             case 'MAP':
                 this.switchScreen('map');
@@ -1362,28 +1639,6 @@ export class Game {
         const step = this.state.brewingState.step;
         const mode = this.state.brewingState.mode;
 
-        // Mode Switching
-        if (cmd === 'SWITCH_MODE') {
-            const modes = ['coffee', 'matcha'];
-            if (this.state.upgrades.includes('mode_espresso')) modes.push('espresso');
-
-            let currentIdx = modes.indexOf(mode);
-            let nextMode = modes[(currentIdx + 1) % modes.length];
-
-            if (step !== 0) {
-                this.log("Finish current brew first.", 'error');
-                return;
-            }
-            this.state.brewingState.mode = nextMode;
-            let modeName = 'AeroPress';
-            if (nextMode === 'matcha') modeName = 'Matcha Bowl';
-            if (nextMode === 'espresso') modeName = 'Espresso Machine';
-
-            this.log(`Switched to ${modeName}.`, 'system');
-            this.updateBrewingVisuals();
-            return;
-        }
-
         // RNG Event Check (5% chance on any action)
         if (Math.random() < 0.05) {
             this.triggerRandomEvent();
@@ -1392,8 +1647,10 @@ export class Game {
         // Espresso Workflow
         if (mode === 'espresso') {
             switch (cmd) {
+                case 'SWITCH_MODE':
+                    this.openModeMenu();
+                    break;
                 case 'GRIND':
-                    if (step !== 0) return;
                     if (!this.consumeResource('beans_premium', 18)) {
                         this.log("Need Premium Beans!", 'error');
                         return;
@@ -1403,13 +1660,11 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'TAMP':
-                    if (step !== 1) return;
                     this.state.brewingState.step = 2;
                     this.log("Tamped the grounds firmly.", 'success');
                     this.audio.playAction();
                     break;
                 case 'PULL_SHOT':
-                    if (step !== 2) return;
                     if (!this.consumeResource('water', 50)) {
                         this.log("Need water!", 'error');
                         return;
@@ -1419,7 +1674,6 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'STEAM_MILK':
-                    if (step !== 3) return;
                     if (!this.consumeResource('milk', 100)) {
                         this.log("Need milk!", 'error');
                         return;
@@ -1429,13 +1683,16 @@ export class Game {
                     this.audio.playAction(); // Hiss sound ideally
                     break;
                 case 'POUR':
-                    if (step !== 4) return;
                     this.state.brewingState.step = 5;
                     this.log("Poured latte art.", 'success');
                     this.audio.playAction();
                     break;
                 case 'SERVE':
-                    if (step !== 5) return;
+                    if (step !== 5) {
+                        this.log("Not ready yet! Finish brewing first.", 'error');
+                        this.audio.playError();
+                        return;
+                    }
                     if (!this.consumeResource('cups', 1)) {
                         this.log("Out of cups!", 'error');
                         return;
@@ -1453,8 +1710,10 @@ export class Game {
         // Matcha Workflow
         if (mode === 'matcha') {
             switch (cmd) {
+                case 'SWITCH_MODE':
+                    this.openModeMenu();
+                    break;
                 case 'SIFT':
-                    if (step !== 0) return;
                     if (!this.consumeResource('matcha_powder', 5)) {
                         this.log("Need Matcha Powder!", 'error');
                         return;
@@ -1465,7 +1724,6 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'ADD_WATER':
-                    if (step !== 1) return;
                     if (!this.consumeResource('water', 100)) {
                         this.log("Need water!", 'error');
                         return;
@@ -1476,13 +1734,16 @@ export class Game {
                     this.audio.playAction();
                     break;
                 case 'WHISK':
-                    if (step !== 2) return;
                     this.state.brewingState.step = 3;
                     this.log("Whisked to perfection!", 'success');
                     this.audio.playChime();
                     break;
                 case 'SERVE':
-                    if (step !== 3) return;
+                    if (step !== 3) {
+                        this.log("Not ready yet! Whisk it properly.", 'error');
+                        this.audio.playError();
+                        return;
+                    }
                     if (!this.consumeResource('cups', 1)) {
                         this.log("Out of cups!", 'error');
                         return;
@@ -1498,91 +1759,52 @@ export class Game {
 
         // Coffee Workflow (Standard)
         switch (cmd) {
-            case 'GRIND':
-                if (step !== 0) {
-                    this.log("Already ground the beans.", 'error');
-                    this.audio.playError();
-                    return;
-                }
-                const type = args[1] ? args[1].toUpperCase() : 'STD';
-                const beanKey = type === 'PRM' ? 'beans_premium' : 'beans_standard';
-
-                if (!this.consumeResource(beanKey, 20)) {
+            case 'SWITCH_MODE':
+                this.openModeMenu();
+                break;
+            case 'GRIND_BEANS':
+                // Removed strict step check
+                if (!this.consumeResource('beans_standard', 20)) {
                     this.log("Out of beans!", 'error');
-                    this.audio.playError();
                     return;
                 }
-                this.trackResourceUsage(beanKey, 20);
                 this.state.brewingState.step = 1;
-                this.state.brewingState.beanType = type;
-                this.log(`Ground 20g of ${type === 'PRM' ? 'Premium' : 'Standard'} beans.`, 'success');
-                this.audio.playAction();
-                this.updateBrewingVisuals();
-
-                // Fast grinder upgrade check
-                if (this.state.upgrades.includes('grinder_fast')) this.log("Fast grinder goes brrr!", 'system');
+                this.log("Beans ground.", 'system');
+                this.audio.playGrind();
                 break;
 
             case 'ADD_WATER':
-                if (step !== 1) {
-                    this.log("Grind beans first.", 'error');
-                    this.audio.playError();
-                    return;
-                }
-                if (!this.consumeResource('water', 200)) {
-                    this.log("Need water!", 'error');
-                    this.audio.playError();
+                // Removed strict step check
+                if (!this.consumeResource('water', 250)) {
+                    this.log("Out of water!", 'error');
                     return;
                 }
                 this.state.brewingState.step = 2;
-                this.log("Added hot water.", 'success');
-                this.audio.playAction();
-                this.updateBrewingVisuals();
+                this.log("Water added.", 'system');
+                this.audio.playPour();
                 break;
 
             case 'STIR':
-                if (step !== 2) {
-                    this.log("Add water first.", 'error');
-                    this.audio.playError();
-                    return;
-                }
+                // Removed strict step check
                 this.state.brewingState.step = 3;
-                this.log("Gently stirred.", 'success');
+                this.log("Stirred the grounds.", 'system');
                 this.audio.playAction();
-                this.updateBrewingVisuals();
-                break;
-
-            case 'TALK':
-                this.handleDialogueCommand('TALK');
-                break;
-
-            case 'SHOP':
-                this.switchScreen('shop');
-                break;
-
-            case 'MAP':
-                this.switchScreen('map');
                 break;
 
             case 'PLUNGE':
-                if (step !== 3) {
-                    this.log("Stir first.", 'error');
-                    this.audio.playError();
-                    return;
-                }
+                // Removed strict step check
                 if (!this.consumeResource('filters', 1)) {
                     this.log("Out of filters!", 'error');
                     return;
                 }
                 this.state.brewingState.step = 4;
-                this.log("Pressed the coffee.", 'success');
+                this.log("Plunged! Coffee is ready.", 'success');
                 this.audio.playAction();
-                this.updateBrewingVisuals();
                 break;
 
             case 'SERVE':
                 if (step !== 4) {
-                    this.log("Not ready yet.", 'error');
+                    this.log("Not ready yet! Finish the brew.", 'error');
                     this.audio.playError();
                     return;
                 }
@@ -1592,7 +1814,14 @@ export class Game {
                 }
                 this.serveCustomer();
                 break;
+
+            case 'TRASH':
+                this.state.brewingState.step = 0;
+                this.log("Tossed the brew.", 'neutral');
+                this.audio.playTrash();
+                break;
         }
+        this.updateBrewingVisuals();
     }
 
     serveCustomer() {
@@ -1682,23 +1911,34 @@ export class Game {
         matchaControls.classList.add('hidden');
         espressoControls.classList.add('hidden');
 
-        // Hide serve buttons by default
-        if (btnServeCoffee) btnServeCoffee.classList.add('hidden');
-        if (btnServeMatcha) btnServeMatcha.classList.add('hidden');
-        if (btnServeEspresso) btnServeEspresso.classList.add('hidden');
+        // Helper to toggle disabled state
+        const setServeButtonState = (btn, enabled) => {
+            if (!btn) return;
+            btn.classList.remove('hidden'); // Always visible
+            if (enabled) {
+                btn.classList.remove('disabled');
+            } else {
+                btn.classList.add('disabled');
+            }
+        };
+
+        // Reset all to disabled first
+        setServeButtonState(btnServeCoffee, false);
+        setServeButtonState(btnServeMatcha, false);
+        setServeButtonState(btnServeEspresso, false);
 
         if (mode === 'matcha') {
             matchaControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station matcha-mode step-${step}`;
-            if (step === 3 && btnServeMatcha) btnServeMatcha.classList.remove('hidden');
+            setServeButtonState(btnServeMatcha, step === 3);
         } else if (mode === 'espresso') {
             espressoControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station espresso-mode step-${step}`;
-            if (step === 5 && btnServeEspresso) btnServeEspresso.classList.remove('hidden');
+            setServeButtonState(btnServeEspresso, step === 5);
         } else {
             coffeeControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station ${classes[step]}`;
-            if (step === 4 && btnServeCoffee) btnServeCoffee.classList.remove('hidden');
+            setServeButtonState(btnServeCoffee, step === 4);
         }
 
         // Update park station if it exists
@@ -1934,9 +2174,9 @@ export class Game {
 
             let order = 'Coffee';
             // Order Logic
+            // STRICT CHECK: Only allow Matcha if unlocked
             if (this.state.upgrades.includes('mode_matcha') && (specialType === 'hipster' || Math.random() < 0.3)) {
-                this.state.currentCustomer.order = { type: 'matcha', name: 'Matcha Latte' };
-                this.log(`${this.state.currentCustomer.name} wants a Matcha Latte.`, 'neutral');
+                order = 'Matcha Latte';
             } else if (this.state.upgrades.includes('mode_espresso') && Math.random() < 0.3) {
                 order = 'Espresso'; // Simplification, could be Latte/Cappuccino
             }
