@@ -566,7 +566,7 @@ export class Game {
 
                 // Migration: Convert object-based upgrades to array
                 if (this.state.upgrades && !Array.isArray(this.state.upgrades)) {
-                    console.log("Migrating upgrades from object to array...");
+
                     const newUpgrades = [];
                     // Map old keys to new keys if necessary, or just use keys
                     // Old keys: fastGrinder, espressoMachine, matchaSet
@@ -635,14 +635,14 @@ export class Game {
 
     submitName() {
         try {
-            console.log("submitName called");
+
             const input = document.getElementById('player-name-input');
             if (!input) {
                 console.error("Input element not found!");
                 return;
             }
             const name = input.value.trim();
-            console.log("Name entered:", name);
+
 
             if (name) {
                 this.state.playerName = name;
@@ -661,7 +661,7 @@ export class Game {
 
     startGame(isNewGame = true) {
         try {
-            console.log("startGame called", isNewGame ? "(new game)" : "(loaded game)");
+
             this.updateHUD();
             // Expose game instance for button clicks
             window.game = this;
@@ -722,7 +722,7 @@ export class Game {
 
             // Start Real-time Clock
             this.startClock();
-            console.log("startGame completed successfully");
+
         } catch (e) {
             console.error("Error in startGame:", e);
             alert("Error starting game: " + e.message);
@@ -1588,7 +1588,7 @@ export class Game {
         const cmd = cmdParts[0];
 
         if (!cmd) return;
-        console.log("handleInput:", cmd);
+
 
         // Global/Menu commands
         switch (cmd) {
