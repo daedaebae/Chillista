@@ -209,6 +209,55 @@ export class Game {
         }
     }
 
+    updateInventoryDisplay() {
+        const container = document.getElementById('inventory-items');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const itemNames = {
+            beans_standard: 'Standard Beans',
+            beans_premium: 'Premium Beans',
+            matcha_powder: 'Matcha Powder',
+            water: 'Water',
+            milk: 'Milk',
+            cups: 'Cups',
+            filters: 'Filters'
+        };
+
+        const itemIcons = {
+            beans_standard: '🫘',
+            beans_premium: '✨',
+            matcha_powder: '🍃',
+            water: '💧',
+            milk: '🥛',
+            cups: '🥤',
+            filters: '📄'
+        };
+
+        Object.entries(this.state.inventory).forEach(([key, amount]) => {
+            if (amount > 0 || ['beans_standard', 'water', 'milk', 'cups', 'filters'].includes(key)) {
+                const el = document.createElement('div');
+                el.className = 'inventory-item';
+
+                let displayAmount = amount;
+                let unit = '';
+
+                if (key.includes('beans') || key === 'matcha_powder') unit = 'g';
+                if (key === 'water' || key === 'milk') unit = 'ml';
+
+                el.innerHTML = `
+                    <div class="icon">${itemIcons[key] || '📦'}</div>
+                    <div class="details">
+                        <h3>${itemNames[key] || key}</h3>
+                        <p>${displayAmount}${unit}</p>
+                    </div>
+                `;
+                container.appendChild(el);
+            }
+        });
+    }
+
     handleBuyCommand(args) {
         // Format: BUY [ITEM] [QUANTITY]
         if (args.length < 3) return;
@@ -597,15 +646,13 @@ export class Game {
             nameModal.classList.add('hidden');
         }
 
-        // Try to load game first
-        if (this.loadGame()) {
-            // Saved game found - skip name entry and start directly
-            this.startGame(false); // false = loaded game, don't randomize weather
+        // Show Intro Modal
+        const introModal = document.getElementById('intro-modal');
+        if (introModal) {
+            introModal.classList.remove('hidden');
         } else {
-            // New game flow - show name entry
-            if (nameModal) {
-                nameModal.classList.remove('hidden');
-            }
+            // Fallback if modal missing
+            this.startFlow();
         }
 
         // Autosave every 30 seconds (only when menu is closed)
@@ -630,6 +677,34 @@ export class Game {
                     this.submitName();
                 }
             });
+        }
+    }
+
+    closeIntro() {
+        const introModal = document.getElementById('intro-modal');
+        if (introModal) {
+            introModal.classList.add('hidden');
+            this.audio.playAction();
+
+            // Unlock audio context on user interaction
+            if (this.audio.context.state === 'suspended') {
+                this.audio.context.resume();
+            }
+        }
+        this.startFlow();
+    }
+
+    startFlow() {
+        // Try to load game first
+        if (this.loadGame()) {
+            // Saved game found - skip name entry and start directly
+            this.startGame(false); // false = loaded game, don't randomize weather
+        } else {
+            // New game flow - show name entry
+            const nameModal = document.getElementById('name-modal');
+            if (nameModal) {
+                nameModal.classList.remove('hidden');
+            }
         }
     }
 

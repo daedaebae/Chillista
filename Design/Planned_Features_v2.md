@@ -31,31 +31,53 @@
     - [ ] **TODO (BLOCKED)**: Generate missing HUD icons (Rep, Pantry).
 
 ## Upcoming Priorities (Phase 3)
-- **Recipe Expansion**:
-    - [ ] Latte art mini-game/quality check.
-    - [ ] Seasonal drinks (Pumpkin Spice, Peppermint).
-- **Staff Management**:
-    - [ ] Hire a barista to automate brewing.
-    - [ ] Staff wages and shifts.
 - **Customization**:
     - [ ] Decorate the cart (unlockable skins).
+        - [ ] Do not generate new assets, use existing pixel art as placeholders. (rename files as placeholder1.png, placeholder2.png, etc.)
     - [ ] Customizable menu board.
-- **Events**:
-    - [ ] Festivals (high traffic).
-    - [ ] Rush hour mechanics.
+    - [ ] Decoration effects on customer mood.
+    - [ ] Themed decoration sets.
+    - [ ] Cart Upgrades (Larger capacity, better equipment placement).
 - **Upgrades**:
     - [ ] Upgrade system (cost, effect).
-        - [ ] Upgrades tab in the store.
+        - [ ] Upgrades tab in the shop.
     - [ ] Upgrade requirements (cash, reputation).
 - **Mode System**:
-    - [ ] Hide the mode button and make it an unlockable item. Each mode can be purchased from the store under the 'upgrades' tab. 
+    - [ ] Hide the mode button and make it an unlockable item. Each mode can be purchased from the shop under the 'upgrades' tab. 
     - [ ] Create three separate mode menus. When pressing the mode button a small header should display what mode you are in: 
         - [ ] aeropress, matcha, espresso machine. 
         - [ ] Pressing the mode button should open the mode menu.
         - [ ] Each mode should have its own unique brewing method and ingredients.
 - **Debug**:
-    - [ ] Debug mode (cheats, stats).
-    - [ ] Debug menu (cheats, stats).
-    - [ ] Debug menu (cheats, stats).
+    - [ ] Improved Debug mode
+        - [ ] stats
+        - [ ] advanced logging
 
-
+## Upcoming Priorities (Phase 4)
+- **Staff Management**:
+    - [ ] Hire a barista to automate brewing.
+    - [ ] Staff wages and shifts.
+    - [ ] Training System (Improve staff efficiency).
+    - [ ] Multi-Location Management.
+- **Events**:
+    - [ ] Festivals (high traffic).
+    - [ ] Rush hour mechanics.
+    - [ ] Special Customers (Celebrity visits, Food critic reviews, Regular milestones).
+    - [ ] Weather Events (Storms, Perfect weather days, Seasonal patterns).
+- **Recipe Expansion**:
+    - [ ] Latte art mini-game/quality check.
+    - [ ] Seasonal drinks (Pumpkin Spice, Peppermint).
+    - [ ] Custom Recipes (Player-created drink combinations).
+    - [ ] Drink Quality Tiers (poor/fair/good/excellent).
+- **Random Customer Generation**: 
+    - [ ] Customers are generated randomly based on weather conditions and time of day.
+- **Advanced Systems**:
+    - [ ] Achievement System.
+    - [ ] Statistics Tracking (Lifetime, Best day, Customer history).
+    - [ ] Social Features (Share summaries, Compare stats).
+    - [ ] Tutorial System (Interactive, Tips, Advanced guides).
+- **Customization**:
+    - [ ] Customizable menu board.
+    - [ ] Decoration effects on customer mood.
+    - [ ] Themed decoration sets.
+    - [ ] Cart Upgrades (Larger capacity, better equipment placement).
