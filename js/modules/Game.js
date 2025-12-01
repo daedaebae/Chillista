@@ -51,7 +51,8 @@ export class Game {
                 timePaused: false,
                 infiniteResources: false,
                 timeSpeed: 1 // 1x, 2x, 5x, or 10x
-            }
+            },
+            gameStarted: false // Block input until intro is closed
         };
 
         this.ui = {
@@ -575,7 +576,9 @@ export class Game {
                 e.stopPropagation();
                 const panel = this.ui.customerInfoPanel;
                 if (panel && this.state.currentCustomer) {
-                    // Toggle on mobile, show on hover for desktop
+                    // MOBILE INTERACTION:
+                    // On touch devices (where hover isn't available), clicking the portrait
+                    // toggles the customer info panel. On desktop, it shows on hover (handled by CSS).
                     if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
                         // Mobile device - toggle panel
                         panel.classList.toggle('show-on-touch');
@@ -718,7 +721,28 @@ export class Game {
             nameModal.classList.add('hidden');
         }
 
-        // Show Intro Modal
+        // Check for existing save
+        if (localStorage.getItem('baristaSimSave')) {
+            console.log("Found save file, skipping intro...");
+            if (this.loadGame()) {
+                this.state.gameStarted = true;
+
+                // Show HUD buttons
+                const musicToggle = document.getElementById('music-toggle');
+                const mapToggle = document.getElementById('map-toggle');
+                if (musicToggle) musicToggle.classList.remove('hidden');
+                if (mapToggle) mapToggle.classList.remove('hidden');
+
+                this.startGame(false);
+
+                // Ensure intro modal is hidden
+                const introModal = document.getElementById('intro-modal');
+                if (introModal) introModal.classList.add('hidden');
+                return;
+            }
+        }
+
+        // Show Intro Modal if no save or load failed
         const introModal = document.getElementById('intro-modal');
         if (introModal) {
             introModal.classList.remove('hidden');
@@ -761,6 +785,14 @@ export class Game {
         }
     }
 
+    startNewGameFlow() {
+        // Show intro modal explicitly
+        const introModal = document.getElementById('intro-modal');
+        if (introModal) {
+            introModal.classList.remove('hidden');
+        }
+    }
+
     closeIntro() {
         const introModal = document.getElementById('intro-modal');
         if (introModal) {
@@ -780,20 +812,28 @@ export class Game {
                 }
             }
         }
-        this.startFlow();
+
+        // Show HUD buttons
+        const musicToggle = document.getElementById('music-toggle');
+        const mapToggle = document.getElementById('map-toggle');
+        if (musicToggle) musicToggle.classList.remove('hidden');
+        if (mapToggle) mapToggle.classList.remove('hidden');
+
+        this.state.gameStarted = true; // Unblock input
+
+        // Show name entry when intro is closed
+        this.showNameModal();
     }
 
-    startFlow() {
-        // Try to load game first
-        if (this.loadGame()) {
-            // Saved game found - skip name entry and start directly
-            this.startGame(false); // false = loaded game, don't randomize weather
-        } else {
-            // New game flow - show name entry
-            const nameModal = document.getElementById('name-modal');
-            if (nameModal) {
-                nameModal.classList.remove('hidden');
-            }
+    showNameModal() {
+        const nameModal = document.getElementById('name-modal');
+        if (nameModal) {
+            nameModal.classList.remove('hidden');
+            // Focus input
+            setTimeout(() => {
+                const input = document.getElementById('player-name-input');
+                if (input) input.focus();
+            }, 100);
         }
     }
 
@@ -1156,6 +1196,8 @@ export class Game {
     }
 
     toggleMenu() {
+        // Allow settings to be accessed before game starts
+        // if (!this.state.gameStarted) return; 
         const menu = document.getElementById('menu-overlay');
         const isOpening = menu.classList.contains('hidden');
         menu.classList.toggle('hidden');
@@ -1175,6 +1217,7 @@ export class Game {
     }
 
     toggleDebugMenu() {
+        if (!this.state.gameStarted) return;
         const debugMenu = document.getElementById('debug-menu-overlay');
         const isOpening = debugMenu.classList.contains('hidden');
         debugMenu.classList.toggle('hidden');
@@ -1345,6 +1388,7 @@ export class Game {
     }
 
     toggleShop() {
+        if (!this.state.gameStarted) return;
         const shop = document.getElementById('screen-shop');
         if (!shop) return;
 
@@ -1370,6 +1414,7 @@ export class Game {
     }
 
     toggleDarkMode() {
+        if (!this.state.gameStarted) return;
         if (!this.state.darkModeUnlocked) {
             this.log("🔒 Dark mode locked. Serve 3 customers to unlock!", 'error');
             this.audio.playError();
@@ -1707,6 +1752,9 @@ export class Game {
 
 
     handleInput(commandStr) {
+        console.log(`handleInput: ${commandStr}, gameStarted: ${this.state.gameStarted}`);
+        if (!this.state.gameStarted) return; // Block input
+
         const cmdParts = commandStr.trim().toUpperCase().split(' ');
         const cmd = cmdParts[0];
 
@@ -1753,6 +1801,7 @@ export class Game {
     }
 
     handleBrewCommand(cmd, args) {
+        console.log(`handleBrewCommand: ${cmd}, mode: ${this.state.brewingState.mode}, step: ${this.state.brewingState.step}`);
         if (!this.state.currentCustomer) {
             this.log("Relax... wait for a guest.", 'error');
             this.audio.playError();
@@ -1909,6 +1958,7 @@ export class Game {
             case 'SWITCH_MODE':
                 this.openModeMenu();
                 break;
+            case 'GRIND':
             case 'GRIND_BEANS':
                 // Removed strict step check
                 if (!this.consumeResource('beans_standard', 20)) {
@@ -2517,6 +2567,10 @@ export class Game {
 
             // Remove all old status classes
             el.classList.remove('resource-low', 'resource-critical', 'resource-warning');
+
+            // Skip checks for locked items
+            if (resource === 'matcha_powder' && !this.state.upgrades.includes('matcha_kit')) continue;
+            if (resource === 'beans_premium' && !this.state.upgrades.includes('espresso_kit')) continue;
 
             if (amount === 0) {
                 el.classList.add('resource-critical');

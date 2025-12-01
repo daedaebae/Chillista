@@ -31,6 +31,14 @@
     - [ ] **TODO (BLOCKED)**: Generate missing HUD icons (Rep, Pantry).
 
 ## Upcoming Priorities (Phase 3)
+- **Convert to React Native**:
+    - [ ] Review the entire project and create a plan to convert it to React Native.
+        - [ ] Create a new branch called 'react-native' for the project.
+        - [ ] Map out features and dependencies and prepare to put each in its own commit on this branch.
+        - [ ] Commit and push each feature to the 'react-native' branch.
+        - [ ] Once the branch is ready, create a pull request for me to review.
+
+## Upcoming Priorities (Phase 4)
 - **Customization**:
     - [ ] Decorate the cart (unlockable skins).
         - [ ] Do not generate new assets, use existing pixel art as placeholders. (rename files as placeholder1.png, placeholder2.png, etc.)
@@ -53,7 +61,7 @@
         - [ ] stats
         - [ ] advanced logging
 
-## Upcoming Priorities (Phase 4)
+## Upcoming Priorities (Phase 5)
 - **Staff Management**:
     - [ ] Hire a barista to automate brewing.
     - [ ] Staff wages and shifts.

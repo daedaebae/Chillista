@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chillista</title>
     <link rel="stylesheet" href="css/chillista.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -132,9 +132,13 @@
                 <!-- Coffee Controls -->
                 <div id="coffee-controls" class="control-group">
                     <button class="btn action" onclick="game.handleInput('GRIND')">Grind</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('ADD_WATER')">Water</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('STIR')">Stir</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('PLUNGE')">Plunge</button>
+                    <div class="arrow">→</div>
                     <button id="btn-serve-coffee" class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
                     <button class="btn nav hidden" onclick="game.handleInput('SWITCH_MODE')">Mode</button>
                     <button class="btn nav" onclick="game.handleInput('TALK')">Talk</button>
@@ -144,8 +148,11 @@
                 <!-- Matcha Controls -->
                 <div id="matcha-controls" class="control-group hidden">
                     <button class="btn action" onclick="game.handleInput('SIFT')">Sift</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('ADD_WATER')">Water</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('WHISK')">Whisk</button>
+                    <div class="arrow">→</div>
                     <button id="btn-serve-matcha" class="btn action" onclick="game.handleInput('SERVE')">Serve</button>
                     <button id="btn-mode-matcha" class="btn nav hidden"
                         onclick="game.handleInput('SWITCH_MODE')">Mode</button>
@@ -155,10 +162,15 @@
                 <!-- Espresso Controls -->
                 <div id="espresso-controls" class="control-group hidden">
                     <button class="btn action" onclick="game.handleInput('GRIND')">Grind</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('TAMP')">Tamp</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('PULL_SHOT')">Pull</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('STEAM_MILK')">Steam</button>
+                    <div class="arrow">→</div>
                     <button class="btn action" onclick="game.handleInput('POUR')">Pour</button>
+                    <div class="arrow">→</div>
                     <button id="btn-serve-espresso" class="btn action"
                         onclick="game.handleInput('SERVE')">Serve</button>
                     <button id="btn-mode-espresso" class="btn nav hidden"
@@ -377,11 +389,11 @@
     </div>
     <!-- Name Entry Modal -->
     <div id="name-modal" class="menu-overlay hidden">
-        <div class="coffee-menu" style="height: auto; min-height: 300px;">
+        <div class="coffee-menu" style="height: auto;width: auto;">
             <h2>Welcome Barista!</h2>
-            <p style="margin-bottom: 1.5rem;">What should we call you?</p>
+            <p style="text-align: center;margin-top: auto;">What should we call you?</p>
             <div class="menu-group">
-                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="12"
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="32"
                     style="font-family: var(--font-ui); font-size: 1.5rem; padding: 0.5rem; width: 100%; text-align: center; border: 2px solid var(--text-color); border-radius: 8px;">
             </div>
             <div class="menu-group">
@@ -403,8 +415,8 @@
         </div>
     </div>
 
-    <div id="music-toggle" class="music-toggle" onclick="game.toggleMenu()">⚙️</div>
-    <div id="map-toggle" class="map-toggle" onclick="game.switchScreen('map')">🗺️</div>
+    <div id="music-toggle" class="music-toggle hidden" onclick="game.toggleMenu()">⚙️</div>
+    <div id="map-toggle" class="map-toggle hidden" onclick="game.switchScreen('map')">🗺️</div>
 
     <!-- Diegetic Menu Overlay -->
     <div id="menu-overlay" class="menu-overlay hidden">
@@ -519,21 +531,47 @@
     </div>
 
     <!-- Intro Modal -->
-    <div id="intro-modal" class="menu-overlay">
-        <div class="coffee-menu" style="text-align: center; max-width: 400px;">
-            <h1 style="font-size: 3rem; margin-bottom: 0.5rem; color: var(--primary-color);">Chillista</h1>
-            <p style="font-size: 1.2rem; margin-bottom: 2rem;">A cozy coffee shop simulator.</p>
-
-            <div style="margin-bottom: 2rem;">
-                <p>Developed by</p>
-                <h3 style="color: var(--accent-color);">Durf</h3>
-            </div>
-
-            <div class="menu-group">
-                <a href="https://github.com/daedaebae" target="_blank" class="btn action"
-                    style="display: block; text-decoration: none; margin-bottom: 1rem;">
-                    ❤️ Support the Developer - GitHub
-                </a>
+    <div id="intro-modal" class="menu-overlay hidden">
+        <div class="coffee-menu">
+            <h2>Chillista(Demo)</h2>
+            <p style="text-align: center; font-size: 1.5rem; margin-top: 0.1rem; margin-bottom: 0.1rem;">A cozy barista
+                simulator.</p>
+            <div
+                style="text-align: left; background: rgba(255,255,255,0.5); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-color);">
+                <p style="font-size: 1.1rem; line-height: 1.6;">
+                    Hating your job isn't uncommon, but you never <em
+                        style="color: var(--accent-color); font-weight: bold;"> hated </em>
+                    it, you just never...
+                    <em style="color: var(--accent-color); font-weight: bold;"> loved </em> it!
+                    <br>
+                    <br>
+                    You <em style="color: var(--accent-color); font-weight: bold;"> love </em> drinking <em
+                        style="color: #A0522D; font-style: italic;">coffee</em>.
+                    <br>
+                    <br>
+                    You <em style="color: var(--accent-color); font-weight: bold;"> love </em> making <em
+                        style="color: #A0522D; font-style: italic;">coffee</em>.
+                    <br>
+                    <br>
+                    You saw a bicycle cart for sale on the street and daydreamed of filling it with all you need to <em
+                        style="color: #A0522D; font-style: italic;">brew</em>
+                    <em style="color: #A0522D; font-style: italic;">coffee</em> in the open air.
+                    <br>
+                    <br>
+                    On a whim, you bought it and took it to your garage to fill it with the tools and the <em
+                        style="color: #6F4E37; font-style: italic;">beans</em>. You
+                    it to your bike and rode down to your favorite street corner to set up shop,
+                    smiling all the way there.
+                    <br>
+                    <br>
+                    Tomorrow, you plan to go back to work, but maybe, if this works out, one day you won't have to.
+                    It's a small cart, but it's yours, and for some reason doing this just feels right.
+                </p>
+                <p style="font-size: 1.1rem; line-height: 1.6;">
+                    <em style="color: #A0522D; font-style: italic;">Brew</em> delicious drinks, charm customers with
+                    good conversation, and build
+                    your reputation to unlock new locations and equipment!
+                </p>
             </div>
 
             <div class="menu-group">
@@ -541,6 +579,15 @@
                     onclick="game.closeIntro()">
                     Start Brewing ☕
                 </button>
+            </div>
+            <div style="text-align: center;">
+                <h4>Support Me!</h4>
+                <p style="font-size: 0.9rem; opacity: 0.8;">Developed by <span
+                        style="color: var(--accent-color);">Durf</span></p>
+                <a href="https://github.com/daedaebae" target="_blank"
+                    style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">
+                    ❤️ Support on GitHub
+                </a>
             </div>
         </div>
     </div>
@@ -624,7 +671,7 @@
         };
     </script>
     <div id="custom-tooltip" class="custom-tooltip hidden"></div>
-    <script type="module" src="js/chillista.js"></script>
+    <script type="module" src="js/main.js"></script>
     <!-- <script src="main.js"></script> -->
 
 </body>
