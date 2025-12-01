@@ -1,7 +1,7 @@
 # Chillista - Game Design Document v2
 
 ## Overview
-Chillista is a chill, lo-fi coffee cart simulation game where players manage a mobile coffee cart, brew drinks using multiple methods, and interact with diverse customers. The game focuses on a relaxing atmosphere with 8-bit pixel art aesthetics and simple yet engaging mechanics.
+Chillista is a chill, coffee shop simulator game where players manage a coffee shop, brew drinks using multiple methods, and interact with diverse customers. The game features a relaxing atmosphere with 8-bit pixel art aesthetics and simple mechanics.
 
 ## Current Implementation Status
 
@@ -20,14 +20,14 @@ Chillista is a chill, lo-fi coffee cart simulation game where players manage a m
 - **Customer Types**:
   - **Default**: Average customer with standard patience
   - **Student**: Impatient (70 patience) but appreciates encouragement
-  - **Hipster**: Likes matcha and artisanal vibes (higher satisfaction from matcha)
-  - **Tourist**: Patient (120 patience) and tips well
-  - **Regular**: Very patient (150 patience), loyal customer
+  - **Hipster**: Likes matcha and artisanal vibes (higher satisfaction from matcha), gives lower tips and higher reputation impact
+  - **Tourist**:Patient (110% patience) and tips well, but rarer occurence
+  - **Regular**: Very patient (120% patience), loyal customer, high reputation impact, occurs most often. Any customer that is not a critic or tourist can become a regular if the service is good and the right dialogue options are selected.
   - **Critic**: Low patience (50) but significant reputation impact (±5 rep)
 - **Customer Attributes**:
   - Patience meter (decays over time)
   - Satisfaction meter (0-100, affects tips and reputation)
-  - Personality-based dialogue preferences
+  - Dialogue preferences
   - Order preferences (coffee, matcha latte, espresso)
 - **Patience Decay**: Customers lose patience over time, affected by weather and location
 - **Customer Arrival**: Random arrival system based on weather conditions
@@ -74,7 +74,7 @@ Chillista is a chill, lo-fi coffee cart simulation game where players manage a m
 - **Cart**: Starting location, standard gameplay
 - **City Park**: Unlocked at 20 reputation, rush hour mode (customers more impatient)
 - **Map Screen**: Navigation between locations
-- **Shop**: Supply store accessible from map
+- **Shop**: Supply shop accessible from map
 
 #### Weather System
 - **Weather Types**: Sunny and Rainy
@@ -149,42 +149,8 @@ Chillista is a chill, lo-fi coffee cart simulation game where players manage a m
 
 ## Planned Features & Improvements
 
-### Immediate Priorities (In Progress)
 
-#### Resource Management Enhancements
-- **Usage Tracking Per Customer**: Track exact resource usage per customer served
-- **Low Stock Warnings**: Enhanced visual and audio warnings
-- **Smart Shopping Suggestions**: 
-  - Calculate average daily usage
-  - Suggest restock quantities based on projected needs
-  - Warn about critical shortages
-
-#### Pantry UI Improvements
-- **Enhanced Visual Layout**: 
-  - Better organization of inventory items
-  - Visual indicators for resource levels
-  - Color-coded warnings (green/yellow/red)
-- **Usage Statistics**: 
-  - Show daily/weekly usage trends
-  - Display average consumption per customer
-  - Projected days until out of stock
-- **Quick Restock Options**: 
-  - One-click restock buttons for common items
-  - Bulk purchase options
-  - Shopping list integration
-
-#### Conversation System Enhancements
-- **Satisfaction Meter**: ✅ Implemented (0-100 scale with emoji indicators)
-- **Context-Aware Dialogue**: 
-  - Dialogue options change based on customer satisfaction
-  - Weather-aware conversation starters
-  - Location-specific dialogue (park vs cart)
-- **Feedback on Dialogue Choices**: 
-  - Visual feedback when choices affect satisfaction
-  - Show reputation/patience changes more clearly
-  - Customer reactions to dialogue choices
-
-### Future Features
+### Immediate Priorities (Phase 3)
 
 #### Recipe Expansion
 - **Latte Art**: Visual quality indicator for espresso drinks

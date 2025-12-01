@@ -1,0 +1,18 @@
+:root {
+    --bg-color: #fdf6e3;
+    /* Cream */
+    --text-color: #5c4033;
+    /* Dark Brown */
+    --accent-color: #8fbc8f;
+    /* Matcha Green */
+    --highlight-color: #d2b48c;
+    /* Tan */
+    --button-bg: #e6ccb2;
+    --button-hover: #ddb892;
+    --error-color: #e07a5f;
+    /* Soft Red */
+    --success-color: #81b29a;
+    /* Soft Green */
+    --font-ui: 'VT323', monospace;
+    --font-mono: 'VT323', monospace;
+}
