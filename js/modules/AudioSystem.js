@@ -5,6 +5,8 @@ export class AudioSystem {
         this.bgm = null;
         this.musicVolume = 0.3;
         this.sfxVolume = 0.1; // 10% volume
+        this.ambienceVolume = 0.3; // 30% volume
+        this.ambienceAudio = null;
         this.playlist = ['assets/music_lofi.mp3', 'assets/synthesis.mp3', 'assets/funkylofi.mp3'];
         this.currentTrackIndex = 0;
         this.trackPlayCount = 0; // Track how many times the current song has played
@@ -15,8 +17,10 @@ export class AudioSystem {
         if (this.enabled) {
             this.context.resume();
             this.playMusic();
+            if (this.ambienceAudio) this.ambienceAudio.play();
         } else {
             this.fadeOutAndStop();
+            if (this.ambienceAudio) this.ambienceAudio.pause();
         }
         return this.enabled;
     }
@@ -28,6 +32,11 @@ export class AudioSystem {
 
     setSFXVolume(val) {
         this.sfxVolume = val / 100;
+    }
+
+    setAmbienceVolume(val) {
+        this.ambienceVolume = val / 100;
+        if (this.ambienceAudio) this.ambienceAudio.volume = this.ambienceVolume;
     }
 
     playTone(freq, type, duration) {
@@ -156,6 +165,42 @@ export class AudioSystem {
 
     stopMusic() {
         this.fadeOutAndStop();
+    }
+
+    playAmbience(url) {
+        if (this.ambienceAudio) {
+            if (this.ambienceAudio.src.includes(url) && !this.ambienceAudio.paused) return;
+            this.ambienceAudio.pause();
+        }
+
+        this.ambienceAudio = new Audio(url);
+        this.ambienceAudio.loop = true;
+        this.ambienceAudio.volume = 0; // Start at 0 for fade in
+
+        if (this.enabled) {
+            this.ambienceAudio.play().catch(e => console.log("Ambience play failed:", e));
+            // Fade in
+            const fadeInterval = setInterval(() => {
+                if (this.ambienceAudio.volume < this.ambienceVolume) {
+                    this.ambienceAudio.volume = Math.min(this.ambienceAudio.volume + 0.05, this.ambienceVolume);
+                } else {
+                    clearInterval(fadeInterval);
+                }
+            }, 200);
+        }
+    }
+
+    stopAmbience() {
+        if (!this.ambienceAudio) return;
+        const fadeInterval = setInterval(() => {
+            if (this.ambienceAudio.volume > 0.05) {
+                this.ambienceAudio.volume -= 0.05;
+            } else {
+                this.ambienceAudio.volume = 0;
+                this.ambienceAudio.pause();
+                clearInterval(fadeInterval);
+            }
+        }, 100);
     }
 
     skipToNextTrack() {

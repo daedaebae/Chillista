@@ -439,6 +439,11 @@
             </div>
 
             <div class="menu-group">
+                <label>Ambience Volume</label>
+                <input type="range" min="0" max="100" value="30" class="slider" oninput="game.setAmbienceVolume(this.value)">
+            </div>
+
+            <div class="menu-group">
                 <label>Music Volume</label>
                 <input type="range" min="0" max="100" value="30" class="slider"
                     oninput="game.setMusicVolume(this.value)">
