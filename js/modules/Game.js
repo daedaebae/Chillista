@@ -44,13 +44,11 @@ export class Game {
             unlockedLocations: ['cart'],
             darkModeUnlocked: false, // Dark mode unlock state
             darkModeEnabled: false, // Dark mode toggle state
-            debug: {
-                enabled: false,
-                weatherDisabled: false,
-                customerArrivalDisabled: false,
-                timePaused: false,
-                infiniteResources: false,
-                timeSpeed: 1 // 1x, 2x, 5x, or 10x
+            settings: {
+                uiScale: 100,
+                musicVolume: 30,
+                sfxVolume: 10,
+                ambienceVolume: 30
             }
         };
 
@@ -103,6 +101,13 @@ export class Game {
             // Update slider position if it exists
             const slider = document.querySelector('input[oninput="game.setUIScale(this.value)"]');
             if (slider) slider.value = this.state.settings.uiScale;
+        }
+
+        // Initialize volumes if settings exist, otherwise defaults are used
+        if (this.state.settings) {
+             if (this.state.settings.musicVolume !== undefined) this.setMusicVolume(this.state.settings.musicVolume);
+             if (this.state.settings.sfxVolume !== undefined) this.setSFXVolume(this.state.settings.sfxVolume);
+             if (this.state.settings.ambienceVolume !== undefined) this.setAmbienceVolume(this.state.settings.ambienceVolume);
         }
 
         // Initialize the game (show name modal or load saved game)
@@ -822,6 +827,7 @@ export class Game {
                     if (!this.audio.bgm || this.audio.bgm.paused) {
                         this.audio.playMusic();
                     }
+                    this.audio.playAmbience('assets/ambience_shop.mp3');
                 });
                 document.removeEventListener('click', unlockAudio);
                 document.removeEventListener('keydown', unlockAudio);
@@ -1287,10 +1293,20 @@ export class Game {
 
     setMusicVolume(val) {
         this.audio.setMusicVolume(val);
+        if (!this.state.settings) this.state.settings = {};
+        this.state.settings.musicVolume = val;
     }
 
     setSFXVolume(val) {
         this.audio.setSFXVolume(val);
+        if (!this.state.settings) this.state.settings = {};
+        this.state.settings.sfxVolume = val;
+    }
+
+    setAmbienceVolume(val) {
+        this.audio.setAmbienceVolume(val);
+        if (!this.state.settings) this.state.settings = {};
+        this.state.settings.ambienceVolume = val;
     }
 
     toggleMusic(enabled) {
