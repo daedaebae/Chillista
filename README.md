@@ -16,14 +16,34 @@ A cozy 8-bit coffee cart simulation game where you brew coffee, chat with custom
 - **Upgrades**: Purchase equipment and decorations to improve your cart
 - **Save System**: Auto-saves your progress every 30 seconds
 
+## Live Demo
+Play the game online: [https://daedaebae.github.io/Chillista/](https://daedaebae.github.io/Chillista/)
+
+## How to Run Locally
+
+Due to browser CORS policies, you need to run a local server instead of opening the HTML file directly.
+
+### Option 1: Use Python's built-in server
+```bash
+python3 -m http.server 8000
+```
+Then open http://localhost:8000 in your browser.
+
+### Option 2: Use Node.js http-server
+```bash
+npx http-server -p 8000 -c-1
+```
+Then open http://localhost:8000 in your browser.
+
 ## How to Play
 
-1. Open `index.html` in a web browser
-2. Enter your barista name
-3. Serve customers by brewing their orders
-4. Talk to customers to build relationships and earn tips
-5. Visit the shop to buy supplies and upgrades
-6. Unlock new locations as your reputation grows
+1. Start the local server (see above)
+2. Open http://localhost:8000 in your browser
+3. Enter your barista name
+4. Serve customers by brewing their orders
+5. Talk to customers to build relationships and earn tips
+6. Visit the shop to buy supplies and upgrades
+7. Unlock new locations as your reputation grows
 
 ## Brewing Controls
 

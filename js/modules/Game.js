@@ -5,7 +5,8 @@ import DIALOGUE_DATA from '../data/dialogueData.js';
 export class Game {
     constructor() {
         this.state = {
-            time: '08:00 AM', // Simplified for now, will need minutes
+            time: '05:00 AM', // Simplified for now, will need minutes
+            day: 1,
             minutesElapsed: 0, // 0 = 8:00 AM, 540 = 5:00 PM
             cash: 50.00,
             inventory: {
@@ -28,14 +29,18 @@ export class Game {
                 customersServed: 0,
                 tipsEarned: 0,
                 dailyEarnings: 0,
+                cumulativeEarnings: 0, // Total money earned across all days
                 reputation: 0
             },
-            weather: 'sunny', // sunny, rainy
-            upgrades: {
-                fastGrinder: false,
-                espressoMachine: false,
-                matchaSet: false // New upgrade
+            purchaseHistory: [], // Track all purchases
+            marketTrends: {
+                beans_standard: [],
+                beans_premium: [],
+                milk: [],
+                matcha_powder: []
             },
+            weather: 'sunny', // sunny, rainy
+            upgrades: [], // List of purchased upgrade IDs
             unlockedLocations: ['cart'],
             darkModeUnlocked: false, // Dark mode unlock state
             darkModeEnabled: false, // Dark mode toggle state
@@ -55,9 +60,11 @@ export class Game {
             customerName: document.getElementById('customer-name'),
             patienceMeter: document.getElementById('patience-meter'),
             satisfactionMeter: document.getElementById('satisfaction-meter'),
-            inventory: document.getElementById('inventory-display'),
+            inventory: document.getElementById('inventory-items'),
             log: document.getElementById('game-log'),
             brewingStation: document.getElementById('brewing-station'),
+            matchaStation: document.getElementById('matcha-station'),
+            espressoStation: document.getElementById('espresso-station'),
             parkBrewingStation: document.getElementById('park-brewing-station'),
             decorations: document.getElementById('decorations-area'),
             customerPortrait: document.getElementById('customer-portrait'),
@@ -73,6 +80,7 @@ export class Game {
                 park: document.getElementById('node-park')
             },
             weatherOverlay: document.getElementById('weather-overlay'),
+            weatherIcon: document.getElementById('weather-icon'),
             summary: {
                 earnings: document.getElementById('summary-earnings'),
                 customers: document.getElementById('summary-customers'),
@@ -103,7 +111,475 @@ export class Game {
         }
 
         // Initialize the game (show name modal or load saved game)
+        this.upgradeDefinitions = {
+            'grinder_fast': { name: 'Fast Grinder', cost: 50, rep: 0, description: 'Grind beans instantly.', type: 'passive' },
+            'mode_matcha': { name: 'Matcha Kit', cost: 100, rep: 10, description: 'Unlock Matcha brewing mode.', type: 'mode', modeId: 'matcha' },
+            'mode_espresso': { name: 'Espresso Machine', cost: 250, rep: 25, description: 'Unlock Espresso brewing mode.', type: 'mode', modeId: 'espresso' }
+        };
+
         this.init();
+
+        // Setup customer portrait touch/click handlers
+        this.setupCustomerPortraitTouch();
+
+        // Global Key Handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault(); // Prevent focus change
+                this.toggleInventory();
+            }
+        });
+
+        // Initial check
+        this.checkModeUnlock();
+    }
+
+    checkModeUnlock() {
+        // Show Mode buttons if any mode upgrade is owned
+        const hasModes = this.state.upgrades.some(u => u.startsWith('mode_'));
+        const modeBtns = document.querySelectorAll('button[onclick="game.handleInput(\'SWITCH_MODE\')"]');
+
+        modeBtns.forEach(btn => {
+            if (hasModes) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        });
+    }
+
+    toggleDarkMode(enabled) {
+        this.state.darkModeEnabled = enabled;
+        if (enabled) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+
+    toggleInventory() {
+        const modal = document.getElementById('screen-inventory');
+        if (modal) {
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                this.switchInventoryTab('items'); // Default to items
+                this.updateInventoryDisplay(); // Ensure fresh data
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+    }
+
+    switchInventoryTab(tabName) {
+        // Update tab buttons
+        const tabs = document.querySelectorAll('#screen-inventory .tab-btn');
+        tabs.forEach(btn => {
+            if (btn.textContent.toLowerCase() === tabName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const items = document.getElementById('inventory-items');
+        const stats = document.getElementById('inventory-stats');
+
+        if (tabName === 'items') {
+            items.classList.remove('hidden');
+            stats.classList.add('hidden');
+        } else {
+            items.classList.add('hidden');
+            stats.classList.remove('hidden');
+            this.renderInventoryStats();
+        }
+    }
+
+    renderInventoryStats() {
+        const historyList = document.getElementById('purchase-history-list');
+        if (historyList) {
+            historyList.innerHTML = '';
+            const recent = this.state.purchaseHistory.slice(-10).reverse(); // Last 10
+            if (recent.length === 0) {
+                historyList.innerHTML = '<li>No purchases yet.</li>';
+            } else {
+                recent.forEach(p => {
+                    const li = document.createElement('li');
+                    li.textContent = `Day ${p.day}: Bought ${p.quantity} ${p.item} for $${p.cost.toFixed(2)}`;
+                    historyList.appendChild(li);
+                });
+            }
+        }
+
+        // Market Trends (Placeholder for now)
+        const trends = document.getElementById('market-stats-content');
+        if (trends) {
+            trends.innerHTML = '<p>Market prices are stable.</p>';
+        }
+    }
+
+    updateInventoryDisplay() {
+        const container = document.getElementById('inventory-items');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const itemNames = {
+            beans_standard: 'Standard Beans',
+            beans_premium: 'Premium Beans',
+            matcha_powder: 'Matcha Powder',
+            water: 'Water',
+            milk: 'Milk',
+            cups: 'Cups',
+            filters: 'Filters'
+        };
+
+        const itemIcons = {
+            beans_standard: '🫘',
+            beans_premium: '✨',
+            matcha_powder: '🍃',
+            water: '💧',
+            milk: '🥛',
+            cups: '🥤',
+            filters: '📄'
+        };
+
+        Object.entries(this.state.inventory).forEach(([key, amount]) => {
+            if (amount > 0 || ['beans_standard', 'water', 'milk', 'cups', 'filters'].includes(key)) {
+                const el = document.createElement('div');
+                el.className = 'inventory-item';
+
+                let displayAmount = amount;
+                let unit = '';
+
+                if (key.includes('beans') || key === 'matcha_powder') unit = 'g';
+                if (key === 'water' || key === 'milk') unit = 'ml';
+
+                el.innerHTML = `
+                    <div class="icon">${itemIcons[key] || '📦'}</div>
+                    <div class="details">
+                        <h3>${itemNames[key] || key}</h3>
+                        <p>${displayAmount}${unit}</p>
+                    </div>
+                `;
+                container.appendChild(el);
+            }
+        });
+    }
+
+    handleBuyCommand(args) {
+        // Format: BUY [ITEM] [QUANTITY]
+        if (args.length < 3) return;
+
+        const itemMap = {
+            'BEANS_STD': { key: 'beans_standard', cost: 0.05, name: 'Std Beans' }, // $0.05 per gram
+            'BEANS_PRM': { key: 'beans_premium', cost: 0.10, name: 'Prm Beans' }, // $0.10 per gram
+            'MILK': { key: 'milk', cost: 0.02, name: 'Milk' }, // $0.02 per ml
+            'MILK_OAT': { key: 'milk_oat', cost: 0.06, name: 'Oat-Milk' }, // $0.02 per ml
+            'WATER': { key: 'water', cost: 0.004, name: 'Water' }, // $2 for 500ml
+            'MATCHA': { key: 'matcha_powder', cost: 0.20, name: 'Matcha' }, // $10 for 50g
+            'CUPS': { key: 'cups', cost: 0.10, name: 'Cups' }, // $5 for 50
+            'FILTERS': { key: 'filters', cost: 0.05, name: 'Filters' }, // $2.50 for 50
+            'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' }
+        };
+
+        const itemKey = args[1];
+        const quantity = parseInt(args[2]);
+
+        if (!itemMap[itemKey]) {
+            this.log("Unknown item.", 'error');
+            return;
+        }
+
+        if (isNaN(quantity) && itemMap[itemKey].type !== 'decoration') {
+            this.log("Invalid quantity.", 'error');
+            return;
+        }
+
+        const item = itemMap[itemKey];
+        const totalCost = item.type === 'decoration' ? item.cost : item.cost * quantity;
+
+        if (this.state.cash >= totalCost) {
+            this.state.cash -= totalCost;
+
+            if (item.type === 'decoration') {
+                this.state.decorations.push(item.key);
+                this.renderDecorations();
+                this.log(`Bought a ${item.name}! Cozy vibes increased.`, 'success');
+            } else {
+                this.state.inventory[item.key] += quantity;
+                this.log(`Bought ${quantity} ${item.name}`, 'success');
+
+                // Track purchase
+                if (!this.state.purchaseHistory) this.state.purchaseHistory = [];
+                this.state.purchaseHistory.push({
+                    day: this.state.day || 1, // Assuming day is tracked, default to 1
+                    item: item.name,
+                    quantity: quantity,
+                    cost: totalCost,
+                    timestamp: Date.now()
+                });
+            }
+
+            this.audio.playAction();
+            this.updateHUD(); // Update cash display in shop
+            this.advanceTime(5); // Buying takes 5 minutes
+        } else {
+            this.log(`Need $${totalCost.toFixed(2)}`, 'error');
+            this.audio.playError();
+        }
+    }
+
+    openModeMenu() {
+        const modal = document.getElementById('mode-selection-modal');
+        if (!modal) return;
+
+        // Update locked states
+        const btnMatcha = document.getElementById('mode-btn-matcha');
+        const btnEspresso = document.getElementById('mode-btn-espresso');
+
+        if (btnMatcha) {
+            if (this.state.upgrades.includes('mode_matcha')) {
+                btnMatcha.classList.remove('locked');
+                btnMatcha.querySelector('.mode-desc').textContent = 'Traditional & Zen';
+            } else {
+                btnMatcha.classList.add('locked');
+                btnMatcha.querySelector('.mode-desc').textContent = 'Locked (Buy Kit)';
+            }
+        }
+
+        if (btnEspresso) {
+            if (this.state.upgrades.includes('mode_espresso')) {
+                btnEspresso.classList.remove('locked');
+                btnEspresso.querySelector('.mode-desc').textContent = 'Rich & Intense';
+            } else {
+                btnEspresso.classList.add('locked');
+                btnEspresso.querySelector('.mode-desc').textContent = 'Locked (Buy Machine)';
+            }
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    closeModeMenu() {
+        const modal = document.getElementById('mode-selection-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    selectMode(mode) {
+        if (this.state.brewingState.step !== 0) {
+            this.log("Finish current brew first.", 'error');
+            this.closeModeMenu();
+            return;
+        }
+
+        // Check locks
+        if (mode === 'matcha' && !this.state.upgrades.includes('mode_matcha')) {
+            this.audio.playError();
+            return;
+        }
+        if (mode === 'espresso' && !this.state.upgrades.includes('mode_espresso')) {
+            this.audio.playError();
+            return;
+        }
+
+        this.state.brewingState.mode = mode;
+        let modeName = 'AeroPress';
+        if (mode === 'matcha') modeName = 'Matcha Bowl';
+        if (mode === 'espresso') modeName = 'Espresso Machine';
+
+        this.log(`Switched to ${modeName}.`, 'system');
+
+        // Update Controls
+        const controls = {
+            coffee: document.getElementById('coffee-controls'),
+            matcha: document.getElementById('matcha-controls'),
+            espresso: document.getElementById('espresso-controls')
+        };
+
+        // Hide all first
+        Object.values(controls).forEach(el => el && el.classList.add('hidden'));
+
+        // Show selected
+        if (controls[mode]) controls[mode].classList.remove('hidden');
+
+        // Update Visuals
+        this.updateBrewingVisuals();
+        this.closeModeMenu();
+    }
+
+    updateBrewingVisuals() {
+        const { mode, step } = this.state.brewingState;
+
+        // Hide all stations first
+        if (this.ui.brewingStation) this.ui.brewingStation.classList.add('hidden');
+        if (this.ui.matchaStation) this.ui.matchaStation.classList.add('hidden');
+        if (this.ui.espressoStation) this.ui.espressoStation.classList.add('hidden');
+
+        // Show active station
+        let activeStation;
+        if (mode === 'coffee') activeStation = this.ui.brewingStation;
+        if (mode === 'matcha') activeStation = this.ui.matchaStation;
+        if (mode === 'espresso') activeStation = this.ui.espressoStation;
+
+        if (activeStation) {
+            activeStation.classList.remove('hidden');
+
+            // Update contents based on step (simplified for now)
+            const contents = activeStation.querySelector('.contents');
+            if (contents) {
+                contents.className = 'contents'; // Reset
+                if (step > 0) contents.classList.add('step-' + step);
+            }
+        }
+    }
+
+    switchShopTab(tabName) {
+        // Update tab buttons
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(btn => {
+            if (btn.textContent.toLowerCase() === tabName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Show/Hide containers
+        const supplies = document.getElementById('shop-supplies');
+        const upgrades = document.getElementById('shop-upgrades');
+
+        if (tabName === 'supplies') {
+            supplies.classList.remove('hidden');
+            upgrades.classList.add('hidden');
+        } else {
+            supplies.classList.add('hidden');
+            upgrades.classList.remove('hidden');
+            this.renderUpgrades();
+        }
+    }
+
+    renderUpgrades() {
+        const container = document.getElementById('shop-upgrades');
+        container.innerHTML = '';
+
+        Object.entries(this.upgradeDefinitions).forEach(([id, upgrade]) => {
+            const isOwned = this.state.upgrades.includes(id);
+            const canAfford = this.state.cash >= upgrade.cost;
+            const hasRep = this.state.stats.reputation >= upgrade.rep;
+            const isLocked = !hasRep;
+
+            const el = document.createElement('div');
+            el.className = `shop-item ${isOwned ? 'owned' : ''} ${isLocked ? 'locked' : ''}`;
+
+            let icon = '⚙️';
+            if (upgrade.type === 'mode') icon = '✨';
+
+            el.innerHTML = `
+                <div class="icon">${icon}</div>
+                <div class="details">
+                    <h3>${upgrade.name}</h3>
+                    <p>${upgrade.description}</p>
+                    <p class="cost">
+                        ${isOwned ? 'Purchased' : `$${upgrade.cost} • ${upgrade.rep} Rep`}
+                    </p>
+                </div>
+                <button class="btn buy" 
+                    onclick="game.buyUpgrade('${id}')"
+                    ${isOwned || isLocked ? 'disabled' : ''}>
+                    ${isOwned ? 'Owned' : (isLocked ? 'Locked' : 'Buy')}
+                </button>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    buyUpgrade(id) {
+        const upgrade = this.upgradeDefinitions[id];
+        if (!upgrade) return;
+
+        if (this.state.upgrades.includes(id)) {
+            this.log("You already own this upgrade.", 'neutral');
+            return;
+        }
+
+        if (this.state.cash < upgrade.cost) {
+            this.log(`Need $${upgrade.cost.toFixed(2)}`, 'error');
+            this.audio.playError();
+            return;
+        }
+
+        if (this.state.stats.reputation < upgrade.rep) {
+            this.log(`Need ${upgrade.rep} Reputation`, 'error');
+            this.audio.playError();
+            return;
+        }
+
+        // Purchase successful
+        this.state.cash -= upgrade.cost;
+        this.state.upgrades.push(id);
+        this.updateHUD();
+        this.audio.playAction();
+        this.log(`Purchased ${upgrade.name}!`, 'success');
+
+        // Apply effects
+        if (upgrade.type === 'mode') {
+            // Unlock mode logic will go here or be checked dynamically
+            this.log(`Unlocked ${upgrade.name} mode!`, 'success');
+        }
+        this.checkModeUnlock(); // Update UI immediately
+        this.renderUpgrades(); // Refresh UI
+        this.saveGame(); // Save progress
+    }
+
+    consumeResource(resource, amount) {
+        // Helper function to consume resources, respecting infinite resources debug option
+        if (this.state.debug && this.state.debug.infiniteResources) {
+            return true; // Always succeed if infinite resources enabled
+        }
+        if (this.state.inventory[resource] < amount) {
+            return false; // Not enough resources
+        }
+        this.state.inventory[resource] -= amount;
+        this.trackResourceUsage(resource, amount); // Track for statistics
+        return true; // Successfully consumed
+    }
+
+    setupCustomerPortraitTouch() {
+        // Add click/touch handler for customer portrait to toggle info panel on mobile
+        if (this.ui.customerPortrait && !this.ui.customerPortrait.hasAttribute('data-touch-setup')) {
+            this.ui.customerPortrait.setAttribute('data-touch-setup', 'true');
+
+            this.ui.customerPortrait.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panel = this.ui.customerInfoPanel;
+                if (panel && this.state.currentCustomer) {
+                    // Toggle on mobile, show on hover for desktop
+                    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+                        // Mobile device - toggle panel
+                        panel.classList.toggle('show-on-touch');
+                    }
+                }
+            });
+
+            // Also handle touch events for better mobile support
+            let touchStartTime = 0;
+            this.ui.customerPortrait.addEventListener('touchstart', (e) => {
+                touchStartTime = Date.now();
+            });
+
+            this.ui.customerPortrait.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const touchDuration = Date.now() - touchStartTime;
+                // Only toggle if it was a quick tap (not a long press)
+                if (touchDuration < 300) {
+                    const panel = this.ui.customerInfoPanel;
+                    if (panel && this.state.currentCustomer) {
+                        panel.classList.toggle('show-on-touch');
+                    }
+                }
+            });
+        }
     }
 
     setUIScale(value) {
@@ -132,8 +608,9 @@ export class Game {
             timestamp: Date.now()
         };
         localStorage.setItem('chillista_save', JSON.stringify(saveData));
-        this.log("Game Saved.", 'system');
-        this.audio.playSuccess();
+        // Silent save - no log or audio
+        // this.log("Game Saved.", 'system');
+        // this.audio.playSuccess();
 
         // Visual feedback - show a brief success message
         const saveBtn = document.querySelector('button[onclick="game.saveGame()"]');
@@ -186,8 +663,23 @@ export class Game {
                 // Merge saved state with default state to handle new fields
                 this.state = { ...this.state, ...saveData.state };
 
+                // Migration: Convert object-based upgrades to array
+                if (this.state.upgrades && !Array.isArray(this.state.upgrades)) {
+
+                    const newUpgrades = [];
+                    // Map old keys to new keys if necessary, or just use keys
+                    // Old keys: fastGrinder, espressoMachine, matchaSet
+                    // New keys: grinder_fast, mode_espresso, mode_matcha
+                    if (this.state.upgrades.fastGrinder) newUpgrades.push('grinder_fast');
+                    if (this.state.upgrades.espressoMachine) newUpgrades.push('mode_espresso');
+                    if (this.state.upgrades.matchaSet) newUpgrades.push('mode_matcha');
+
+                    this.state.upgrades = newUpgrades;
+                }
+
                 // Restore complex objects if needed (e.g., Date objects, though we use simple numbers)
                 this.log("Welcome back! Game loaded.", 'system');
+                this.checkModeUnlock(); // Update UI based on upgrades
                 return true;
             } catch (e) {
                 console.error("Failed to load save:", e);
@@ -204,15 +696,13 @@ export class Game {
             nameModal.classList.add('hidden');
         }
 
-        // Try to load game first
-        if (this.loadGame()) {
-            // Saved game found - skip name entry and start directly
-            this.startGame(false); // false = loaded game, don't randomize weather
+        // Show Intro Modal
+        const introModal = document.getElementById('intro-modal');
+        if (introModal) {
+            introModal.classList.remove('hidden');
         } else {
-            // New game flow - show name entry
-            if (nameModal) {
-                nameModal.classList.remove('hidden');
-            }
+            // Fallback if modal missing
+            this.startFlow();
         }
 
         // Autosave every 30 seconds (only when menu is closed)
@@ -238,18 +728,63 @@ export class Game {
                 }
             });
         }
+
+        // Attempt to play music immediately (may be blocked by browser)
+        try {
+            this.audio.context.resume().then(() => {
+                this.audio.playMusic();
+            }).catch(e => console.log("Autoplay blocked, waiting for interaction:", e));
+        } catch (e) {
+            console.log("Audio init failed:", e);
+        }
+    }
+
+    closeIntro() {
+        const introModal = document.getElementById('intro-modal');
+        if (introModal) {
+            introModal.classList.add('hidden');
+            this.audio.playAction();
+
+            // Unlock audio context on user interaction
+            if (this.audio.context.state === 'suspended') {
+                this.audio.context.resume().then(() => {
+                    if (!this.audio.bgm || this.audio.bgm.paused) {
+                        this.audio.playMusic();
+                    }
+                });
+            } else {
+                if (!this.audio.bgm || this.audio.bgm.paused) {
+                    this.audio.playMusic();
+                }
+            }
+        }
+        this.startFlow();
+    }
+
+    startFlow() {
+        // Try to load game first
+        if (this.loadGame()) {
+            // Saved game found - skip name entry and start directly
+            this.startGame(false); // false = loaded game, don't randomize weather
+        } else {
+            // New game flow - show name entry
+            const nameModal = document.getElementById('name-modal');
+            if (nameModal) {
+                nameModal.classList.remove('hidden');
+            }
+        }
     }
 
     submitName() {
         try {
-            console.log("submitName called");
+
             const input = document.getElementById('player-name-input');
             if (!input) {
                 console.error("Input element not found!");
                 return;
             }
             const name = input.value.trim();
-            console.log("Name entered:", name);
+
 
             if (name) {
                 this.state.playerName = name;
@@ -268,7 +803,7 @@ export class Game {
 
     startGame(isNewGame = true) {
         try {
-            console.log("startGame called", isNewGame ? "(new game)" : "(loaded game)");
+
             this.updateHUD();
             // Expose game instance for button clicks
             window.game = this;
@@ -310,8 +845,15 @@ export class Game {
                 if (this.state.weather === 'rainy') {
                     this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
                     this.ui.weatherOverlay.style.opacity = '1';
+                    if (this.ui.weatherIcon) {
+                        this.ui.weatherIcon.src = 'assets/weather_rainy.png';
+                    }
                 } else {
+                    this.ui.weatherOverlay.className = 'weather-overlay';
                     this.ui.weatherOverlay.style.opacity = '0';
+                    if (this.ui.weatherIcon) {
+                        this.ui.weatherIcon.src = 'assets/weather_sunny.png';
+                    }
                 }
             }
 
@@ -323,7 +865,7 @@ export class Game {
 
             // Start Real-time Clock
             this.startClock();
-            console.log("startGame completed successfully");
+
         } catch (e) {
             console.error("Error in startGame:", e);
             alert("Error starting game: " + e.message);
@@ -332,9 +874,11 @@ export class Game {
 
     startClock() {
         if (this.clockInterval) clearInterval(this.clockInterval);
+        const speed = this.state.debug.timeSpeed || 1;
+        const interval = 1000 / speed; // Faster interval for higher speeds
         this.clockInterval = setInterval(() => {
             this.advanceTime(1);
-        }, 1000); // 1 real second = 1 game minute
+        }, interval);
     }
 
     handleDialogueCommand(cmd) {
@@ -353,15 +897,28 @@ export class Game {
                 return;
             }
             this.applyDialogueEffect({ type: 'reputation', value: 1, satisfaction: 5 });
-            // Customer responses to small talk
-            const responses = [
-                "Lovely weather we're having!",
-                "I really like the vibe here.",
-                "It's been a long week.",
-                "Your coffee is the best in town.",
-                "Thanks for chatting with me!",
-                "This place is so cozy."
-            ];
+
+            // Context-aware responses based on game state
+            let responses = [];
+
+            if (this.state.weather === 'rainy') {
+                responses = [
+                    "Lovely to have a warm drink on a rainy day!",
+                    "The rain makes coffee taste even better.",
+                    "Thanks for brightening up my gloomy day.",
+                    "Your coffee warms my soul on days like this."
+                ];
+            } else {
+                responses = [
+                    "Lovely weather we're having!",
+                    "I really like the vibe here.",
+                    "It's been a long week, this helps!",
+                    "Your coffee is the best in town.",
+                    "Thanks for chatting with me!",
+                    "This place is so cozy."
+                ];
+            }
+
             const response = responses[Math.floor(Math.random() * responses.length)];
             this.dialogue.show([`${this.state.currentCustomer.name}: "${response}"`]);
             this.hideDialogueChoices();
@@ -375,10 +932,10 @@ export class Game {
             }
             const success = this.applyDialogueEffect({ type: 'upsell', chance: 0.4, value: 3, satisfaction: 2 });
             if (success) {
-                const responses = ["Ooh, that looks delicious! I'll take one.", "Sure, why not?", "You twisted my arm!"];
+                const responses = ["Ooh, that looks delicious! I'll take one.", "Sure, why not?", "You twisted my arm!", "Actually, yes, I'll treat myself!"];
                 this.dialogue.show([`${this.state.currentCustomer.name}: "${responses[Math.floor(Math.random() * responses.length)]}"`]);
             } else {
-                const responses = ["No thanks, just the drink.", "I'm watching my calories.", "Maybe next time."];
+                const responses = ["No thanks, just the drink.", "I'm watching my calories.", "Maybe next time.", "Not today, thanks though!"];
                 this.dialogue.show([`${this.state.currentCustomer.name}: "${responses[Math.floor(Math.random() * responses.length)]}"`]);
             }
             this.hideDialogueChoices();
@@ -476,52 +1033,62 @@ export class Game {
     applyDialogueEffect(effect) {
         if (!effect) return;
 
+        const customer = this.state.currentCustomer;
+        let feedbackMessages = [];
+
         // Apply satisfaction change if present
-        if (effect.satisfaction && this.state.currentCustomer) {
-            this.state.currentCustomer.satisfaction += effect.satisfaction;
+        if (effect.satisfaction && customer) {
+            customer.satisfaction += effect.satisfaction;
             // Clamp between 0-100
-            this.state.currentCustomer.satisfaction = Math.max(0, Math.min(100, this.state.currentCustomer.satisfaction));
+            customer.satisfaction = Math.max(0, Math.min(100, customer.satisfaction));
 
             // Show feedback based on satisfaction change
             if (effect.satisfaction > 8) {
-                this.log("Customer seems very happy! 😊", 'success');
+                feedbackMessages.push("Customer seems very happy! 😊");
+                this.audio.playChime();
             } else if (effect.satisfaction > 0) {
-                this.log("Customer is pleased.", 'success');
+                feedbackMessages.push("Customer is pleased.");
+                this.audio.playChime();
             } else if (effect.satisfaction < -5) {
-                this.log("Customer looks annoyed... 😞", 'error');
+                feedbackMessages.push("Customer looks annoyed... 😞");
+                this.audio.playError();
+            } else if (effect.satisfaction < 0) {
+                feedbackMessages.push("Customer seems a bit put off.");
+                this.audio.playError();
             }
         }
 
         switch (effect.type) {
             case 'reputation':
                 this.state.stats.reputation += effect.value;
-                this.log(`${effect.value > 0 ? '+' : ''}${effect.value} Rep`, 'success');
+                feedbackMessages.push(`+${effect.value} Rep (Total: ${this.state.stats.reputation})`);
                 break;
             case 'patience':
-                if (this.state.currentCustomer) {
-                    this.state.currentCustomer.patience += effect.value;
-                    this.log(`${effect.value > 0 ? '+' : ''}${effect.value} Patience`, 'success');
+                if (customer) {
+                    customer.patience += effect.value;
+                    feedbackMessages.push(`+${effect.value} Patience`);
                 }
                 break;
             case 'tips':
                 this.state.stats.tipsEarned += effect.value;
                 this.state.cash += effect.value;
-                this.log(`Got a $${effect.value} tip!`, 'success');
+                feedbackMessages.push(`Got a $${effect.value} tip! (Total: $${this.state.cash.toFixed(2)})`);
                 this.audio.playChime();
                 break;
             case 'upsell':
                 if (Math.random() < effect.chance) {
                     this.state.cash += effect.value;
                     this.state.stats.dailyEarnings += effect.value;
-                    this.log(`Upsell successful! +$${effect.value}`, 'success');
+                    feedbackMessages.push(`Upsell successful! +$${effect.value}`);
                     this.audio.playChime();
                     return true;
                 } else {
-                    this.log("Upsell failed.", 'error');
-                    if (this.state.currentCustomer) {
-                        this.state.currentCustomer.patience -= 10;
-                        this.state.currentCustomer.satisfaction -= 5; // Failed upsell hurts satisfaction
+                    feedbackMessages.push("Upsell attempt failed - customer not interested");
+                    if (customer) {
+                        customer.patience -= 10;
+                        customer.satisfaction -= 5;
                     }
+                    this.audio.playError();
                     return false;
                 }
                 break;
@@ -529,6 +1096,12 @@ export class Game {
                 this.handleCustomDialogueAction(effect.action);
                 break;
         }
+
+        // Log all feedback messages
+        feedbackMessages.forEach(msg => {
+            this.log(msg, effect.satisfaction > 0 ? 'success' : effect.satisfaction < 0 ? 'error' : 'system');
+        });
+
         this.updateHUD();
     }
 
@@ -536,12 +1109,18 @@ export class Game {
         switch (action) {
             case 'refill_offer':
                 this.log("Offered free refill. Customer is happy!", 'success');
-                if (this.state.currentCustomer) this.state.currentCustomer.patience += 30;
+                if (this.state.currentCustomer) {
+                    this.state.currentCustomer.patience += 30;
+                    this.state.currentCustomer.satisfaction += 10;
+                }
                 break;
             case 'music_compliment':
-                this.log("Vibing with the customer.", 'system');
+                this.log("Vibing with the customer. +3 Rep", 'system');
                 this.state.stats.reputation += 3;
                 this.audio.playSuccess();
+                if (this.state.currentCustomer) {
+                    this.state.currentCustomer.satisfaction += 5;
+                }
                 break;
             case 'photo_op':
                 this.log("Posed for a photo. +5 Rep!", 'success');
@@ -572,6 +1151,144 @@ export class Game {
         }
 
         this.audio.playAction();
+    }
+
+    toggleDebugMenu() {
+        const debugMenu = document.getElementById('debug-menu-overlay');
+        const isOpening = debugMenu.classList.contains('hidden');
+        debugMenu.classList.toggle('hidden');
+
+        if (isOpening) {
+            // Update checkboxes to match current debug state
+            const weatherCheckbox = document.getElementById('debug-weather-disabled');
+            const customerCheckbox = document.getElementById('debug-customer-arrival-disabled');
+            const timeCheckbox = document.getElementById('debug-time-paused');
+            const resourcesCheckbox = document.getElementById('debug-infinite-resources');
+            const timeSpeedBtn = document.getElementById('time-speed-btn');
+
+            if (weatherCheckbox) weatherCheckbox.checked = this.state.debug.weatherDisabled;
+            if (customerCheckbox) customerCheckbox.checked = this.state.debug.customerArrivalDisabled;
+            if (timeCheckbox) timeCheckbox.checked = this.state.debug.timePaused;
+            if (resourcesCheckbox) resourcesCheckbox.checked = this.state.debug.infiniteResources;
+            if (timeSpeedBtn) timeSpeedBtn.textContent = `⏩ Time Speed: ${this.state.debug.timeSpeed || 1}x`;
+        }
+
+        this.audio.playAction();
+    }
+
+    setDebugEnabled(enabled) {
+        this.state.debug.enabled = enabled;
+        if (!enabled) {
+            // Disable all debug options when debug mode is turned off
+            this.state.debug.weatherDisabled = false;
+            this.state.debug.customerArrivalDisabled = false;
+            this.state.debug.timePaused = false;
+            this.state.debug.infiniteResources = false;
+
+            // Update checkboxes
+            const weatherCheckbox = document.getElementById('debug-weather-disabled');
+            const customerCheckbox = document.getElementById('debug-customer-arrival-disabled');
+            const timeCheckbox = document.getElementById('debug-time-paused');
+            const resourcesCheckbox = document.getElementById('debug-infinite-resources');
+
+            if (weatherCheckbox) weatherCheckbox.checked = false;
+            if (customerCheckbox) customerCheckbox.checked = false;
+            if (timeCheckbox) timeCheckbox.checked = false;
+            if (resourcesCheckbox) resourcesCheckbox.checked = false;
+
+            // Restore weather if it was disabled
+            if (this.state.weather === 'rainy') {
+                this.setWeather('rainy');
+            }
+
+            // Resume time if it was paused
+            if (this.clockInterval === null && !this.state.debug.timePaused) {
+                this.startClock();
+            }
+        }
+        this.saveGame();
+        this.log(`Debug mode ${enabled ? 'enabled' : 'disabled'}`, 'system');
+    }
+
+    setDebugOption(option, value) {
+        this.state.debug[option] = value;
+
+        // Handle specific options
+        if (option === 'timePaused') {
+            if (value) {
+                if (this.clockInterval) {
+                    clearInterval(this.clockInterval);
+                    this.clockInterval = null;
+                }
+                this.log("Time paused", 'system');
+            } else {
+                this.startClock();
+                this.log("Time resumed", 'system');
+            }
+        } else if (option === 'weatherDisabled') {
+            if (value) {
+                // Force sunny weather
+                this.setWeather('sunny');
+                this.log("Weather effects disabled", 'system');
+            } else {
+                // Restore current weather
+                this.setWeather(this.state.weather);
+                this.log("Weather effects enabled", 'system');
+            }
+        } else if (option === 'customerArrivalDisabled') {
+            this.log(`Customer arrivals ${value ? 'disabled' : 'enabled'}`, 'system');
+        } else if (option === 'infiniteResources') {
+            this.log(`Infinite resources ${value ? 'enabled' : 'disabled'}`, 'system');
+        }
+
+        this.saveGame();
+    }
+
+    debugForceWeather(type) {
+        this.setWeather(type);
+        this.log(`Weather forced to ${type}`, 'system');
+    }
+
+    debugSpawnCustomer() {
+        if (this.state.currentCustomer) {
+            this.log("Customer already present", 'error');
+            return;
+        }
+        this.generateCustomer();
+        this.log("Customer spawned", 'success');
+    }
+
+    debugAddCash(amount) {
+        this.state.cash += amount;
+        this.updateHUD();
+        this.log(`Added $${amount}`, 'success');
+        this.saveGame();
+    }
+
+    debugNextDay() {
+        this.log("Skipping to next day...", 'system');
+        this.endGame();
+    }
+
+    debugToggleTimeSpeed() {
+        const speeds = [1, 2, 5, 10];
+        const currentIndex = speeds.indexOf(this.state.debug.timeSpeed || 1);
+        const nextIndex = (currentIndex + 1) % speeds.length;
+        this.state.debug.timeSpeed = speeds[nextIndex];
+
+        // Update button text
+        const btn = document.getElementById('time-speed-btn');
+        if (btn) {
+            btn.textContent = `⏩ Time Speed: ${this.state.debug.timeSpeed}x`;
+        }
+
+        // Restart clock with new speed
+        if (!this.state.debug.timePaused) {
+            this.startClock();
+        }
+
+        this.log(`Time speed set to ${this.state.debug.timeSpeed}x`, 'system');
+        this.saveGame();
     }
 
     setMusicVolume(val) {
@@ -613,6 +1330,20 @@ export class Game {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
+        }
+    }
+
+    toggleShop() {
+        const shop = document.getElementById('screen-shop');
+        if (!shop) return;
+
+        if (shop.classList.contains('hidden')) {
+            shop.classList.remove('hidden');
+            this.renderUpgrades();
+            this.audio.playAction();
+        } else {
+            shop.classList.add('hidden');
+            this.audio.playAction();
         }
     }
 
@@ -687,22 +1418,13 @@ export class Game {
         }
     }
 
-    toggleInventory() {
-        const panel = document.getElementById('inventory-panel');
-        const toggle = document.querySelector('.hud-inventory-toggle');
 
-        if (panel && toggle) {
-            panel.classList.toggle('hidden');
-            toggle.classList.toggle('active');
-            this.audio.playAction();
-        }
-    }
 
     updateHUD() {
         try {
             // Time Display (12-hour format with AM/PM)
             const totalMinutes = this.state.minutesElapsed || 0; // Use minutesElapsed, default to 0
-            let hours = Math.floor(totalMinutes / 60) + 8; // Add 8 for 8:00 AM start
+            let hours = Math.floor(totalMinutes / 60) + 5; // Add 5 for 5:00 AM start
             const minutes = totalMinutes % 60;
             const period = hours >= 12 ? 'PM' : 'AM';
 
@@ -724,25 +1446,24 @@ export class Game {
             // Rep
             if (this.ui.rep) this.ui.rep.textContent = this.state.stats.reputation;
 
-            // Customer Display
-            // Customer Display
+            // Customer Display - Panel is always in DOM, shown on hover via CSS
             if (this.ui.customerInfoPanel) {
                 if (this.state.currentCustomer) {
                     const c = this.state.currentCustomer;
                     const satisfactionEmoji = this.getSatisfactionEmoji(c.satisfaction);
 
-                    this.ui.customerInfoPanel.classList.remove('hidden');
+                    // Panel visibility is controlled by CSS hover, just update content
                     if (this.ui.customerName) this.ui.customerName.textContent = `${c.name} (${c.personality})`;
 
                     if (this.ui.patienceMeter) {
                         this.ui.patienceMeter.textContent = `Patience: ${Math.round(c.patience)}%`;
                         // Color code patience
                         if (c.patience < 30) this.ui.patienceMeter.style.color = 'var(--error-color)';
-                        else this.ui.patienceMeter.style.color = 'var(--highlight-color)';
+                        else if (c.patience < 50) this.ui.patienceMeter.style.color = '#ffa500';
+                        else this.ui.patienceMeter.style.color = 'var(--success-color)';
                     }
 
                     if (this.ui.satisfactionMeter) {
-                        this.ui.satisfactionMeter.classList.remove('hidden');
                         this.ui.satisfactionMeter.textContent = `Mood: ${satisfactionEmoji} (${Math.round(c.satisfaction)}%)`;
                     }
 
@@ -753,8 +1474,6 @@ export class Game {
                             <div>Order: ${c.order}</div>
                         `;
                     }
-                } else {
-                    this.ui.customerInfoPanel.classList.add('hidden');
                 }
             }
 
@@ -762,28 +1481,52 @@ export class Game {
             if (this.ui.inventory) {
                 const inv = this.state.inventory;
                 const suggestions = this.getShoppingSuggestions();
+                const usage = this.state.resourceUsage || {};
 
-                // Inventory Grid
+                // Get usage stats for display
+                const getUsageDisplay = (resource) => {
+                    if (usage[resource]) {
+                        return ` (used: ${usage[resource].used})`;
+                    }
+                    return '';
+                };
+
+                // Inventory Grid with enhanced information
                 this.ui.inventory.innerHTML = `
-                    <div class="inventory-item" id="inv-coffee_beans">
+                    <div class="inventory-item" id="inv-beans_standard">
                         <span class="inventory-icon">🫘</span>
-                        <span class="inventory-name">Beans</span>
-                        <span class="inventory-amount">${inv.coffee_beans}g</span>
+                        <span class="inventory-name">Standard Beans</span>
+                        <span class="inventory-amount">${inv.beans_standard}g${getUsageDisplay('beans_standard')}</span>
+                    </div>
+                    <div class="inventory-item" id="inv-beans_premium">
+                        <span class="inventory-icon">✨</span>
+                        <span class="inventory-name">Premium Beans</span>
+                        <span class="inventory-amount">${inv.beans_premium}g${getUsageDisplay('beans_premium')}</span>
+                    </div>
+                    <div class="inventory-item" id="inv-water">
+                        <span class="inventory-icon">💧</span>
+                        <span class="inventory-name">Water</span>
+                        <span class="inventory-amount">${inv.water}ml${getUsageDisplay('water')}</span>
                     </div>
                     <div class="inventory-item" id="inv-milk">
                         <span class="inventory-icon">🥛</span>
                         <span class="inventory-name">Milk</span>
-                        <span class="inventory-amount">${inv.milk}ml</span>
+                        <span class="inventory-amount">${inv.milk}ml${getUsageDisplay('milk')}</span>
                     </div>
-                    <div class="inventory-item" id="inv-sugar">
-                        <span class="inventory-icon">🍬</span>
-                        <span class="inventory-name">Sugar</span>
-                        <span class="inventory-amount">${inv.sugar}g</span>
+                    <div class="inventory-item" id="inv-matcha_powder">
+                        <span class="inventory-icon">🍵</span>
+                        <span class="inventory-name">Matcha</span>
+                        <span class="inventory-amount">${inv.matcha_powder}g${getUsageDisplay('matcha_powder')}</span>
                     </div>
                     <div class="inventory-item" id="inv-cups">
                         <span class="inventory-icon">🥤</span>
                         <span class="inventory-name">Cups</span>
-                        <span class="inventory-amount">${inv.cups}</span>
+                        <span class="inventory-amount">${inv.cups}${getUsageDisplay('cups')}</span>
+                    </div>
+                    <div class="inventory-item" id="inv-filters">
+                        <span class="inventory-icon">📄</span>
+                        <span class="inventory-name">Filters</span>
+                        <span class="inventory-amount">${inv.filters}${getUsageDisplay('filters')}</span>
                     </div>
                 `;
 
@@ -845,7 +1588,7 @@ export class Game {
         }
     }
 
-    switchScreen(screenName) {
+    switchScreen(screenName, silent = false) {
         if (screenName === 'park' && !this.state.unlockedLocations.includes('park')) {
             this.audio.playError();
             return;
@@ -865,7 +1608,13 @@ export class Game {
             setTimeout(() => target.classList.add('active'), 10);
         }
 
-        this.audio.playAction(); // Click sound
+        if (!silent) {
+            this.audio.playAction(); // Click sound
+        }
+
+        if (screenName === 'shop') {
+            this.renderUpgrades();
+        }
     }
 
     getPatienceLevel(p) {
@@ -884,7 +1633,7 @@ export class Game {
     }
 
     formatTime(minutesElapsed) {
-        const startHour = 8;
+        const startHour = 5;
         const totalMinutes = (startHour * 60) + minutesElapsed;
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
@@ -904,9 +1653,23 @@ export class Game {
 
     advanceTime(minutes) {
         try {
+            // Skip time advancement if paused in debug mode
+            if (this.state.debug && this.state.debug.timePaused) {
+                return;
+            }
+
             this.state.minutesElapsed += minutes;
             this.updateHUD();
             this.checkCustomerPatience(minutes);
+
+            // Skip customer arrival if disabled in debug mode
+            if (this.state.debug && this.state.debug.customerArrivalDisabled) {
+                // Check for end of day
+                if (this.state.minutesElapsed >= 480) { // 1:00 PM
+                    this.endGame();
+                }
+                return;
+            }
 
             // Weather affects customer arrival rate
             let arrivalChance = 0.4; // Base chance (40% per minute)
@@ -922,11 +1685,54 @@ export class Game {
             }
 
             // Check for end of day
-            if (this.state.minutesElapsed >= 540) { // 5:00 PM
+            if (this.state.minutesElapsed >= 480) { // 1:00 PM
                 this.endGame();
             }
         } catch (e) {
             console.error("Error in advanceTime:", e);
+        }
+    }
+
+    updateBrewingVisuals() {
+        const mode = this.state.brewingState.mode;
+        const step = this.state.brewingState.step;
+
+        // Hide all controls first
+        const coffeeControls = document.getElementById('coffee-controls');
+        const matchaControls = document.getElementById('matcha-controls');
+        const espressoControls = document.getElementById('espresso-controls');
+
+        if (coffeeControls) coffeeControls.classList.add('hidden');
+        if (matchaControls) matchaControls.classList.add('hidden');
+        if (espressoControls) espressoControls.classList.add('hidden');
+
+        // Get Serve Buttons
+        const btnServeCoffee = document.getElementById('btn-serve-coffee');
+        const btnServeMatcha = document.getElementById('btn-serve-matcha');
+        const btnServeEspresso = document.getElementById('btn-serve-espresso');
+
+        // Reset Serve Buttons (Always visible, but maybe styled differently if we wanted,
+        // but for now we just ensure they are NOT hidden)
+        if (btnServeCoffee) btnServeCoffee.classList.remove('hidden', 'disabled');
+        if (btnServeMatcha) btnServeMatcha.classList.remove('hidden', 'disabled');
+        if (btnServeEspresso) btnServeEspresso.classList.remove('hidden', 'disabled');
+
+        const classes = ['state-idle', 'state-ground', 'state-water', 'state-stirred', 'state-plunged'];
+
+        if (mode === 'matcha') {
+            matchaControls.classList.remove('hidden');
+            this.ui.brewingStation.className = `brewing-station matcha-mode step-${step}`;
+        } else if (mode === 'espresso') {
+            espressoControls.classList.remove('hidden');
+            this.ui.brewingStation.className = `brewing-station espresso-mode step-${step}`;
+        } else {
+            coffeeControls.classList.remove('hidden');
+            this.ui.brewingStation.className = `brewing-station ${classes[step]}`;
+        }
+
+        // Update park station if it exists
+        if (this.ui.parkBrewingStation) {
+            this.ui.parkBrewingStation.className = this.ui.brewingStation.className;
         }
     }
 
@@ -935,7 +1741,7 @@ export class Game {
         const cmd = cmdParts[0];
 
         if (!cmd) return;
-        console.log("handleInput:", cmd);
+
 
         // Global/Menu commands
         switch (cmd) {
@@ -952,7 +1758,7 @@ export class Game {
                 this.handleDialogueCommand(cmd);
                 return;
             case 'SHOP':
-                this.switchScreen('shop');
+                this.toggleShop();
                 return;
             case 'MAP':
                 this.switchScreen('map');
@@ -986,28 +1792,6 @@ export class Game {
         const step = this.state.brewingState.step;
         const mode = this.state.brewingState.mode;
 
-        // Mode Switching
-        if (cmd === 'SWITCH_MODE') {
-            const modes = ['coffee', 'matcha'];
-            if (this.state.upgrades.espressoMachine) modes.push('espresso');
-
-            let currentIdx = modes.indexOf(mode);
-            let nextMode = modes[(currentIdx + 1) % modes.length];
-
-            if (step !== 0) {
-                this.log("Finish current brew first.", 'error');
-                return;
-            }
-            this.state.brewingState.mode = nextMode;
-            let modeName = 'AeroPress';
-            if (nextMode === 'matcha') modeName = 'Matcha Bowl';
-            if (nextMode === 'espresso') modeName = 'Espresso Machine';
-
-            this.log(`Switched to ${modeName}.`, 'system');
-            this.updateBrewingVisuals();
-            return;
-        }
-
         // RNG Event Check (5% chance on any action)
         if (Math.random() < 0.05) {
             this.triggerRandomEvent();
@@ -1016,58 +1800,72 @@ export class Game {
         // Espresso Workflow
         if (mode === 'espresso') {
             switch (cmd) {
+                case 'SWITCH_MODE':
+                    this.openModeMenu();
+                    break;
                 case 'GRIND':
-                    if (step !== 0) return;
-                    if (this.state.inventory.beans_premium < 18) {
+                    if (!this.consumeResource('beans_premium', 18)) {
                         this.log("Need Premium Beans!", 'error');
                         return;
                     }
-                    this.state.inventory.beans_premium -= 18;
                     this.state.brewingState.step = 1;
                     this.log("Ground 18g for Espresso.", 'success');
                     this.audio.playAction();
                     break;
                 case 'TAMP':
-                    if (step !== 1) return;
+                    if (step < 1) {
+                        this.log("Grind beans first!", 'error');
+                        return;
+                    }
                     this.state.brewingState.step = 2;
                     this.log("Tamped the grounds firmly.", 'success');
                     this.audio.playAction();
                     break;
                 case 'PULL_SHOT':
-                    if (step !== 2) return;
-                    if (this.state.inventory.water < 50) {
+                    if (step < 2) {
+                        this.log("Tamp grounds first!", 'error');
+                        return;
+                    }
+                    if (!this.consumeResource('water', 50)) {
                         this.log("Need water!", 'error');
                         return;
                     }
-                    this.state.inventory.water -= 50;
                     this.state.brewingState.step = 3;
                     this.log("Pulled a rich shot.", 'success');
                     this.audio.playAction();
                     break;
                 case 'STEAM_MILK':
-                    if (step !== 3) return;
-                    if (this.state.inventory.milk < 100) {
+                    if (step < 3) {
+                        this.log("Pull shot first!", 'error');
+                        return;
+                    }
+                    if (!this.consumeResource('milk', 100)) {
                         this.log("Need milk!", 'error');
                         return;
                     }
-                    this.state.inventory.milk -= 100;
                     this.state.brewingState.step = 4;
                     this.log("Steamed silky milk.", 'success');
                     this.audio.playAction(); // Hiss sound ideally
                     break;
                 case 'POUR':
-                    if (step !== 4) return;
+                    if (step < 4) {
+                        this.log("Steam milk first!", 'error');
+                        return;
+                    }
                     this.state.brewingState.step = 5;
                     this.log("Poured latte art.", 'success');
                     this.audio.playAction();
                     break;
                 case 'SERVE':
-                    if (step !== 5) return;
-                    if (this.state.inventory.cups < 1) {
+                    if (step !== 5) {
+                        this.log("Not ready yet! Finish brewing first.", 'error');
+                        this.audio.playError();
+                        return;
+                    }
+                    if (!this.consumeResource('cups', 1)) {
                         this.log("Out of cups!", 'error');
                         return;
                     }
-                    this.state.inventory.cups--;
                     this.trackResourceUsage('cups', 1);
                     this.serveCustomer();
                     break;
@@ -1081,43 +1879,52 @@ export class Game {
         // Matcha Workflow
         if (mode === 'matcha') {
             switch (cmd) {
+                case 'SWITCH_MODE':
+                    this.openModeMenu();
+                    break;
                 case 'SIFT':
-                    if (step !== 0) return;
-                    if (this.state.inventory.matcha_powder < 5) {
+                    if (!this.consumeResource('matcha_powder', 5)) {
                         this.log("Need Matcha Powder!", 'error');
                         return;
                     }
-                    this.state.inventory.matcha_powder -= 5;
                     this.trackResourceUsage('matcha_powder', 5);
                     this.state.brewingState.step = 1;
                     this.log("Sifted the matcha powder.", 'success');
                     this.audio.playAction();
                     break;
                 case 'ADD_WATER':
-                    if (step !== 1) return;
-                    if (this.state.inventory.water < 100) {
+                    if (step < 1) {
+                        this.log("Sift matcha first!", 'error');
+                        return;
+                    }
+                    if (!this.consumeResource('water', 100)) {
                         this.log("Need water!", 'error');
                         return;
                     }
-                    this.state.inventory.water -= 100;
                     this.trackResourceUsage('water', 100);
                     this.state.brewingState.step = 2;
                     this.log("Added hot water.", 'success');
                     this.audio.playAction();
                     break;
                 case 'WHISK':
-                    if (step !== 2) return;
+                    if (step < 2) {
+                        this.log("Add water first!", 'error');
+                        return;
+                    }
                     this.state.brewingState.step = 3;
                     this.log("Whisked to perfection!", 'success');
                     this.audio.playChime();
                     break;
                 case 'SERVE':
-                    if (step !== 3) return;
-                    if (this.state.inventory.cups < 1) {
+                    if (step !== 3) {
+                        this.log("Not ready yet! Whisk it properly.", 'error');
+                        this.audio.playError();
+                        return;
+                    }
+                    if (!this.consumeResource('cups', 1)) {
                         this.log("Out of cups!", 'error');
                         return;
                     }
-                    this.state.inventory.cups--;
                     this.serveCustomer();
                     break;
                 default:
@@ -1129,106 +1936,81 @@ export class Game {
 
         // Coffee Workflow (Standard)
         switch (cmd) {
-            case 'GRIND':
-                if (step !== 0) {
-                    this.log("Already ground the beans.", 'error');
-                    this.audio.playError();
-                    return;
-                }
-                const type = args[1] ? args[1].toUpperCase() : 'STD';
-                const beanKey = type === 'PRM' ? 'beans_premium' : 'beans_standard';
-
-                if (this.state.inventory[beanKey] < 20) {
+            case 'SWITCH_MODE':
+                this.openModeMenu();
+                break;
+            case 'GRIND_BEANS':
+                // Removed strict step check
+                if (!this.consumeResource('beans_standard', 20)) {
                     this.log("Out of beans!", 'error');
-                    this.audio.playError();
                     return;
                 }
-
-                this.state.inventory[beanKey] -= 20;
-                this.trackResourceUsage(beanKey, 20);
                 this.state.brewingState.step = 1;
-                this.state.brewingState.beanType = type;
-                this.log(`Ground 20g of ${type === 'PRM' ? 'Premium' : 'Standard'} beans.`, 'success');
-                this.audio.playAction();
-                this.updateBrewingVisuals();
-
-                // Fast grinder upgrade check
-                if (this.state.upgrades.fastGrinder) this.log("Fast grinder goes brrr!", 'system');
+                this.log("Beans ground.", 'system');
+                this.audio.playGrind();
                 break;
 
             case 'ADD_WATER':
-                if (step !== 1) {
-                    this.log("Grind beans first.", 'error');
+                if (step < 1) {
+                    this.log("Grind beans first!", 'error');
                     this.audio.playError();
                     return;
                 }
-                if (this.state.inventory.water < 200) {
-                    this.log("Need water!", 'error');
-                    this.audio.playError();
+                if (!this.consumeResource('water', 250)) {
+                    this.log("Out of water!", 'error');
                     return;
                 }
-                this.state.inventory.water -= 200;
                 this.state.brewingState.step = 2;
-                this.log("Added hot water.", 'success');
-                this.audio.playAction();
-                this.updateBrewingVisuals();
+                this.log("Water added.", 'system');
+                this.audio.playPour();
                 break;
 
             case 'STIR':
-                if (step !== 2) {
-                    this.log("Add water first.", 'error');
+                if (step < 2) {
+                    this.log("Add water first!", 'error');
                     this.audio.playError();
                     return;
                 }
                 this.state.brewingState.step = 3;
-                this.log("Gently stirred.", 'success');
+                this.log("Stirred the grounds.", 'system');
                 this.audio.playAction();
-                this.updateBrewingVisuals();
-                break;
-
-            case 'TALK':
-                this.handleDialogueCommand('TALK');
-                break;
-
-            case 'SHOP':
-                this.switchScreen('shop');
-                break;
-
-            case 'MAP':
-                this.switchScreen('map');
                 break;
 
             case 'PLUNGE':
-                if (step !== 3) {
-                    this.log("Stir first.", 'error');
+                if (step < 3) {
+                    this.log("Stir first!", 'error');
                     this.audio.playError();
                     return;
                 }
-                if (this.state.inventory.filters < 1) {
+                if (!this.consumeResource('filters', 1)) {
                     this.log("Out of filters!", 'error');
                     return;
                 }
-                this.state.inventory.filters--;
                 this.state.brewingState.step = 4;
-                this.log("Pressed the coffee.", 'success');
+                this.log("Plunged! Coffee is ready.", 'success');
                 this.audio.playAction();
-                this.updateBrewingVisuals();
                 break;
 
             case 'SERVE':
                 if (step !== 4) {
-                    this.log("Not ready yet.", 'error');
+                    this.log("Not ready yet! Finish the brew.", 'error');
                     this.audio.playError();
                     return;
                 }
-                if (this.state.inventory.cups < 1) {
+                if (!this.consumeResource('cups', 1)) {
                     this.log("Out of cups!", 'error');
                     return;
                 }
-                this.state.inventory.cups--;
                 this.serveCustomer();
                 break;
+
+            case 'TRASH':
+                this.state.brewingState.step = 0;
+                this.log("Tossed the brew.", 'neutral');
+                this.audio.playTrash();
+                break;
         }
+        this.updateBrewingVisuals();
     }
 
     serveCustomer() {
@@ -1256,6 +2038,7 @@ export class Game {
         this.state.stats.customersServed++;
         this.state.stats.tipsEarned += tip;
         this.state.stats.dailyEarnings += total;
+        this.state.stats.cumulativeEarnings += total; // Track total earnings across all days
 
         // Reputation logic
         let repChange = 0;
@@ -1309,19 +2092,42 @@ export class Game {
         const matchaControls = document.getElementById('matcha-controls');
         const espressoControls = document.getElementById('espresso-controls');
 
+        const btnServeCoffee = document.getElementById('btn-serve-coffee');
+        const btnServeMatcha = document.getElementById('btn-serve-matcha');
+        const btnServeEspresso = document.getElementById('btn-serve-espresso');
+
         coffeeControls.classList.add('hidden');
         matchaControls.classList.add('hidden');
         espressoControls.classList.add('hidden');
 
+        // Helper to toggle disabled state
+        const setServeButtonState = (btn, enabled) => {
+            if (!btn) return;
+            btn.classList.remove('hidden'); // Always visible
+            if (enabled) {
+                btn.classList.remove('disabled');
+            } else {
+                btn.classList.add('disabled');
+            }
+        };
+
+        // Reset all to disabled first
+        setServeButtonState(btnServeCoffee, false);
+        setServeButtonState(btnServeMatcha, false);
+        setServeButtonState(btnServeEspresso, false);
+
         if (mode === 'matcha') {
             matchaControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station matcha-mode step-${step}`;
+            setServeButtonState(btnServeMatcha, step === 3);
         } else if (mode === 'espresso') {
             espressoControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station espresso-mode step-${step}`;
+            setServeButtonState(btnServeEspresso, step === 5);
         } else {
             coffeeControls.classList.remove('hidden');
             this.ui.brewingStation.className = `brewing-station ${classes[step]}`;
+            setServeButtonState(btnServeCoffee, step === 4);
         }
 
         // Update park station if it exists
@@ -1338,15 +2144,12 @@ export class Game {
             'BEANS_PRM': { key: 'beans_premium', cost: 0.10, name: 'Prm Beans' }, // $0.10 per gram
             'MILK': { key: 'milk', cost: 0.02, name: 'Milk' }, // $0.02 per ml
             'MILK_OAT': { key: 'milk_oat', cost: 0.06, name: 'Oat-Milk' }, // $0.02 per ml
-            'WATER': { key: 'water', cost: 0.004, name: 'Water' }, // $0.004 per ml ($2 for 500ml)
+            'WATER': { key: 'water', cost: 0.004, name: 'Water' }, // $2 for 500ml
             'MATCHA_STD': { key: 'matcha_powder', cost: 0.20, name: 'Matcha Powder' }, // $0.20 per gram,
             'MATCHA_PRM': { key: 'matcha_powder', cost: 0.35, name: 'Matcha Powder' }, // $0.35 per gram
             'CUPS': { key: 'cups', cost: 1.50, name: 'Paper Cups' }, // $1.50 per cup
             'FILTERS': { key: 'filters', cost: 0.05, name: 'Paper Filters' }, // $0.05 per filter
-            'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' },
-            'UPGRADE_GRINDER': { key: 'fastGrinder', cost: 50.00, name: 'Fast Grinder', type: 'upgrade' },
-            'UPGRADE_MATCHA': { key: 'matchaSet', cost: 100.00, name: 'Matcha Set', type: 'upgrade' },
-            'UPGRADE_ESPRESSO': { key: 'espressoMachine', cost: 250.00, name: 'Espresso Machine', type: 'upgrade' }
+            'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' }
         };
 
         const itemKey = args[1];
@@ -1364,9 +2167,6 @@ export class Game {
                 this.state.decorations.push(item.key);
                 this.renderDecorations();
                 this.log(`Bought a ${item.name}! Cozy vibes increased.`, 'success');
-            } else if (item.type === 'upgrade') {
-                this.state.upgrades[item.key] = true;
-                this.log(`Upgraded to ${item.name}!`, 'success');
             } else {
                 this.state.inventory[item.key] += quantity;
                 this.log(`Bought ${quantity} ${item.name}`, 'success');
@@ -1403,14 +2203,13 @@ export class Game {
     endGame() {
         this.log("========================================", 'system');
         this.log(`Day ends. You made $${this.state.stats.dailyEarnings.toFixed(2)}`, 'success');
-        this.audio.playSuccess();
 
         // Show summary screen
         this.ui.summary.earnings.textContent = `$${this.state.stats.dailyEarnings.toFixed(2)}`;
         this.ui.summary.customers.textContent = this.state.stats.customersServed;
         this.ui.summary.tips.textContent = `$${this.state.stats.tipsEarned.toFixed(2)}`;
 
-        this.switchScreen('summary');
+        this.switchScreen('summary', true); // Silent switch to avoid "beep"
     }
 
     handleRelax() {
@@ -1426,20 +2225,44 @@ export class Game {
     }
 
     setWeather(type) {
+        // Check if weather is disabled in debug mode
+        if (this.state.debug && this.state.debug.weatherDisabled) {
+            type = 'sunny'; // Force sunny if weather is disabled
+        }
+
         this.state.weather = type;
         if (this.ui.weatherOverlay) {
             if (type === 'rainy') {
-                this.ui.weatherOverlay.style.opacity = '0.3';
-                this.log("It's a rainy day... Fewer customers, but cozy vibes.", 'system');
-                this.log("Customers seem less patient in the rain.", 'system');
+                this.ui.weatherOverlay.className = 'weather-overlay weather-rain';
+                this.ui.weatherOverlay.style.opacity = '1';
+                if (!this.state.debug || !this.state.debug.weatherDisabled) {
+                    this.log("It's a rainy day... Fewer customers, but cozy vibes.", 'system');
+                    this.log("Customers seem less patient in the rain.", 'system');
+                }
             } else if (type === 'sunny') {
+                this.ui.weatherOverlay.className = 'weather-overlay';
                 this.ui.weatherOverlay.style.opacity = '0';
-                this.log("It's a sunny day! Perfect weather for coffee.", 'system');
-                this.log("Customers are in a great mood today!", 'success');
+                if (!this.state.debug || !this.state.debug.weatherDisabled) {
+                    this.log("It's a sunny day! Perfect weather for coffee.", 'system');
+                    this.log("Customers are in a great mood today!", 'success');
+                }
+            }
+        }
+        // Update weather icon
+        if (this.ui.weatherIcon) {
+            if (type === 'rainy') {
+                this.ui.weatherIcon.src = 'assets/weather_rainy.png';
+                this.ui.weatherIcon.classList.remove('sunny');
+                this.ui.weatherIcon.classList.add('rainy');
+            } else if (type === 'sunny') {
+                this.ui.weatherIcon.src = 'assets/weather_sunny.png';
+                this.ui.weatherIcon.classList.remove('rainy');
+                this.ui.weatherIcon.classList.add('sunny');
             }
         }
     }
     startNewDay() {
+        this.state.day = (this.state.day || 1) + 1;
         this.state.minutesElapsed = 0;
         this.state.stats.dailyEarnings = 0;
         this.state.stats.customersServed = 0;
@@ -1457,6 +2280,7 @@ export class Game {
         this.setWeather(weather);
 
         this.switchScreen('cart');
+        this.saveGame();
     }
     triggerRandomEvent() {
         const events = [
@@ -1524,6 +2348,14 @@ export class Game {
             if (specialType === 'student') patience = 70;
             if (specialType === 'tourist') patience = 120;
 
+            // Avatar Logic
+            let avatarIndex = 0; // Default
+            if (specialType === 'student') avatarIndex = 1;
+            else if (specialType === 'hipster') avatarIndex = 2;
+            else if (specialType === 'tourist') avatarIndex = 3;
+            else if (specialType === 'regular') avatarIndex = 4;
+            else if (specialType === 'critic') avatarIndex = 5;
+
             // Weather affects customer patience
             if (this.state.weather === 'rainy') {
                 patience = Math.floor(patience * 0.8); // Rainy: customers are 20% less patient
@@ -1533,16 +2365,12 @@ export class Game {
 
             let order = 'Coffee';
             // Order Logic
-            if (this.state.upgrades.matchaSet && (specialType === 'hipster' || Math.random() < 0.3)) {
+            // STRICT CHECK: Only allow Matcha if unlocked
+            if (this.state.upgrades.includes('mode_matcha') && (specialType === 'hipster' || Math.random() < 0.3)) {
                 order = 'Matcha Latte';
-                patience += 20;
-            } else if (this.state.upgrades.espressoMachine && Math.random() < 0.3) {
+            } else if (this.state.upgrades.includes('mode_espresso') && Math.random() < 0.3) {
                 order = 'Espresso'; // Simplification, could be Latte/Cappuccino
             }
-
-            // Portrait Logic
-            let portrait = 'assets/pixel_customer_1.png';
-            // if (Math.random() > 0.5) portrait = 'assets/pixel_customer_2.png';
 
             this.state.currentCustomer = {
                 name: name,
@@ -1552,7 +2380,7 @@ export class Game {
                 patience: patience,
                 maxPatience: patience,
                 decay: isPark ? 0.8 : 0.5,
-                portrait: portrait,
+                avatarIndex: avatarIndex,
                 specialType: specialType,
                 arrivalTime: this.state.minutesElapsed,
                 satisfaction: 50, // Start at neutral (0-100 scale)
@@ -1566,9 +2394,15 @@ export class Game {
             this.log(`☕ ${name}${personalityText} arrived and ordered ${order}`, 'success');
 
             // Update both portraits (Cart and Park)
-            this.ui.customerPortrait.src = this.state.currentCustomer.portrait;
+            // Remove old sprite classes
+            this.ui.customerPortrait.className = 'avatar customer';
+            this.ui.customerPortrait.classList.add(`customer-${avatarIndex}`);
+
             this.ui.customerPortrait.setAttribute('data-mood', this.state.currentCustomer.getStatusText());
             this.ui.customerPortrait.style.opacity = '1';
+
+            // Add touch support for mobile to show customer info
+            this.setupCustomerPortraitTouch();
 
             // Special Dialogue
             if (specialType === 'critic') {
@@ -1585,7 +2419,8 @@ export class Game {
 
             const parkPortrait = document.getElementById('park-customer-portrait');
             if (parkPortrait) {
-                parkPortrait.src = this.state.currentCustomer.portrait;
+                parkPortrait.className = 'avatar customer';
+                parkPortrait.classList.add(`customer-${avatarIndex}`);
                 parkPortrait.style.opacity = '1';
             }
 
@@ -1642,44 +2477,114 @@ export class Game {
     }
 
     checkLowStock() {
-        const thresholds = {
-            coffee_beans: 5,
-            milk: 3,
-            sugar: 3,
-            cups: 5,
-            matcha_powder: 5,
-            water: 100
+        // Enhanced thresholds with multiple warning levels
+        const criticalThresholds = {
+            beans_standard: 30,
+            beans_premium: 20,
+            water: 150,
+            milk: 20,
+            matcha_powder: 10,
+            cups: 15,
+            filters: 15
         };
 
-        for (const [resource, amount] of Object.entries(this.state.inventory)) {
-            if (thresholds[resource] && amount <= thresholds[resource]) {
-                const el = document.getElementById(`inv-${resource}`);
-                if (el) el.classList.add('resource-low');
+        const warningThresholds = {
+            beans_standard: 80,
+            beans_premium: 50,
+            water: 300,
+            milk: 60,
+            matcha_powder: 30,
+            cups: 40,
+            filters: 30
+        };
 
-                // Only warn once per day or session? For now, just warn.
-                // To prevent spam, maybe check if we already warned?
-                // Simplified: just log if critical.
-                if (amount === 0) {
-                    // this.log(`Out of ${resource}!`, 'error'); // Can be spammy
-                }
+        const outOfStockResources = [];
+        const criticalResources = [];
+
+        for (const [resource, amount] of Object.entries(this.state.inventory)) {
+            const el = document.getElementById(`inv-${resource}`);
+            if (!el) continue;
+
+            // Remove all old status classes
+            el.classList.remove('resource-low', 'resource-critical', 'resource-warning');
+
+            if (amount === 0) {
+                el.classList.add('resource-critical');
+                outOfStockResources.push(resource);
+            } else if (criticalThresholds[resource] && amount <= criticalThresholds[resource]) {
+                el.classList.add('resource-critical');
+                criticalResources.push(resource);
+            } else if (warningThresholds[resource] && amount <= warningThresholds[resource]) {
+                el.classList.add('resource-warning');
             } else {
-                const el = document.getElementById(`inv-${resource}`);
-                if (el) el.classList.remove('resource-low');
+                el.classList.remove('resource-critical', 'resource-warning');
             }
+        }
+
+        // Log warnings for critical issues (not too spammy)
+        if (outOfStockResources.length > 0 && !this.state.lastStockWarning) {
+            const names = outOfStockResources.map(r => r.replace(/_/g, ' ')).join(', ');
+            this.log(`⚠️ OUT OF STOCK: ${names}!`, 'error');
+            this.state.lastStockWarning = { resources: outOfStockResources, time: Date.now() };
         }
     }
 
     getShoppingSuggestions() {
         const suggestions = [];
-        const usage = this.state.resourceUsage;
         const inventory = this.state.inventory;
 
-        // Simple logic: if stock < 3 days worth of average usage, suggest buying
-        // For now, hardcoded "safe" levels
-        if (inventory.coffee_beans < 50) suggestions.push({ item: 'Standard Beans', reason: 'Low Stock' });
-        if (inventory.milk < 20) suggestions.push({ item: 'Milk', reason: 'Running Low' });
-        if (inventory.sugar < 20) suggestions.push({ item: 'Sugar', reason: 'Sweetness needed' });
-        if (inventory.cups < 30) suggestions.push({ item: 'Cups', reason: 'Essential' });
+        // Enhanced logic based on resource criticality and usage patterns
+        const criticalThresholds = {
+            beans_standard: 40,
+            beans_premium: 30,
+            water: 200,
+            milk: 30,
+            matcha_powder: 15,
+            cups: 25,
+            filters: 20
+        };
+
+        const warningThresholds = {
+            beans_standard: 100,
+            beans_premium: 60,
+            water: 400,
+            milk: 80,
+            matcha_powder: 40,
+            cups: 60,
+            filters: 40
+        };
+
+        // Check for critical levels first (high priority)
+        for (const [resource, criticalLevel] of Object.entries(criticalThresholds)) {
+            if (inventory[resource] <= criticalLevel) {
+                const name = resource.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                suggestions.push({
+                    item: name,
+                    reason: '🔴 CRITICAL - Buy Now!',
+                    priority: 'critical'
+                });
+            }
+        }
+
+        // Check for warning levels (medium priority)
+        if (suggestions.length < 3) {
+            for (const [resource, warningLevel] of Object.entries(warningThresholds)) {
+                if (inventory[resource] <= warningLevel && inventory[resource] > criticalThresholds[resource]) {
+                    const name = resource.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    suggestions.push({
+                        item: name,
+                        reason: '🟡 Low Stock',
+                        priority: 'warning'
+                    });
+                }
+            }
+        }
+
+        // Sort by priority
+        suggestions.sort((a, b) => {
+            const priorityOrder = { critical: 0, warning: 1 };
+            return priorityOrder[a.priority] - priorityOrder[b.priority];
+        });
 
         return suggestions;
     }
