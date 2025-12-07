@@ -7,7 +7,7 @@ export class AudioSystem {
         this.sfxVolume = 0.1; // 10% volume
         this.ambienceVolume = 0.3; // 30% volume
         this.ambienceAudio = null;
-        this.playlist = ['assets/music_lofi.mp3', 'assets/synthesis.mp3', 'assets/funkylofi.mp3'];
+        this.playlist = ['/assets/music_lofi.mp3', '/assets/synthesis.mp3', '/assets/funkylofi.mp3'];
         this.currentTrackIndex = 0;
         this.trackPlayCount = 0; // Track how many times the current song has played
     }
@@ -67,7 +67,6 @@ export class AudioSystem {
     }
     playError() {
         console.log("playError called");
-        console.trace();
         this.playTone(150, 'sawtooth', 0.3);
     }
     playChime() { this.playTone(880, 'triangle', 0.5); }

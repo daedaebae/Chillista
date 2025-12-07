@@ -15,4 +15,32 @@
     /* Soft Green */
     --font-ui: 'VT323', monospace;
     --font-mono: 'VT323', monospace;
+
+    /* Component Specific Defaults */
+    /* Component Specific Defaults */
+    --log-bg: rgba(255, 255, 255, 0.6);
+    --hud-gradient-end: #b08d55;
+    --hud-bg: rgba(255, 250, 240, 0.95);
+    /* Light Mode HUD Background */
+}
+
+body.dark-mode {
+    --bg-color: #2c241b;
+    /* Dark Coffee Bean */
+    --text-color: #e6ccb2;
+    /* Cream/Light Latte */
+    --accent-color: #a8d8a8;
+    /* Brighter Matcha */
+    --highlight-color: #4a3b2a;
+    /* Darker Tan */
+    --button-bg: #5c4033;
+    /* Medium Brown */
+    --button-hover: #6f4e37;
+    /* Lighter Brown */
+
+    --log-bg: rgba(0, 0, 0, 0.6);
+    --hud-gradient-end: #0d0a06;
+    /* Ultra Dark Roast */
+    --hud-bg: #0d0a06;
+    /* Dark Mode HUD Background */
 }

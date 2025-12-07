@@ -52,7 +52,7 @@ export class Game {
                 infiniteResources: false,
                 timeSpeed: 1 // 1x, 2x, 5x, or 10x
             },
-            gameStarted: false // Block input until intro is closed
+            gameStarted: false, // Block input until intro is closed
             settings: {
                 uiScale: 100,
                 musicVolume: 30,
@@ -114,9 +114,9 @@ export class Game {
 
         // Initialize volumes if settings exist, otherwise defaults are used
         if (this.state.settings) {
-             if (this.state.settings.musicVolume !== undefined) this.setMusicVolume(this.state.settings.musicVolume);
-             if (this.state.settings.sfxVolume !== undefined) this.setSFXVolume(this.state.settings.sfxVolume);
-             if (this.state.settings.ambienceVolume !== undefined) this.setAmbienceVolume(this.state.settings.ambienceVolume);
+            if (this.state.settings.musicVolume !== undefined) this.setMusicVolume(this.state.settings.musicVolume);
+            if (this.state.settings.sfxVolume !== undefined) this.setSFXVolume(this.state.settings.sfxVolume);
+            if (this.state.settings.ambienceVolume !== undefined) this.setAmbienceVolume(this.state.settings.ambienceVolume);
         }
 
         // Initialize the game (show name modal or load saved game)

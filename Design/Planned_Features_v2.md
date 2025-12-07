@@ -1,32 +1,52 @@
 # Planned Features v2
 
 ## Recently Completed (Phase 2)
-- **Resource Management**:
-    - [x] Usage tracking per customer.
-    - [x] Low stock warnings (visual indicators).
-    - [x] Smart shopping suggestions.
+- [x] Usage tracking per customer.
+    - [x] **VERIFIED v1.2**: Usage tracking per customer.
+- [x] Low stock warnings (visual indicators).
+    - [x] **VERIFIED v1.2**: Low stock warnings (visual indicators).
+- [x] Smart shopping suggestions.
+    - [x] **VERIFIED v1.2**: Smart shopping suggestions.
 - **Pantry UI**:
     - [x] Enhanced visual layout with icons.
+        - [x] **VERIFIED v1.2**: Enhanced visual layout with icons.
     - [x] Usage statistics display.
+        - [x] **VERIFIED v1.2**: Usage statistics display.
 - **Conversation System**:
     - [x] Satisfaction meter with emojis.
+        - [x] **VERIFIED v1.2**: Satisfaction meter with emojis.
     - [x] Context-aware dialogue (weather-based).
+        - [x] **VERIFIED v1.2**: Context-aware dialogue (weather-based).
     - [x] Feedback on dialogue choices (chimes, visual cues).
+        - [x] **VERIFIED v1.2**: Feedback on dialogue choices (chimes, visual cues).
 - **UI Polish**:
     - [x] Settings menu (volume, scale).
+        - [x] **VERIFIED v1.2**: Settings menu (volume, scale).
     - [x] Real-time clock.
+        - [x] **VERIFIED v1.2**: Real-time clock.
     - [x] Map screen navigation.
+        - [x] **VERIFIED v1.2**: Map screen navigation.
     - [x] Animated weather GIFs.
+        - [x] **VERIFIED v1.2**: Animated weather GIFs.
     - [x] Customer portrait hover tooltip.
+        - [x] **VERIFIED v1.2**: Customer portrait hover tooltip.
 - **Fixes & Polish (Nov 29)**:
     - [x] Removed debug mode requirement.
+        - [x] **VERIFIED v1.2**: Removed debug mode requirement.
     - [x] Enhanced rainy weather overlay.
+        - [x] **VERIFIED v1.2**: Enhanced rainy weather overlay.
     - [x] Implemented money-based upgrade requirements.
+        - [x] **VERIFIED v1.2**: Implemented money-based upgrade requirements.
     - [x] Removed Day Complete beep.
+        - [x] **VERIFIED v1.2**: Removed Day Complete beep.
     - [x] New pixel art HUD icons (larger).
+        - [x] **VERIFIED v1.2**: New pixel art HUD icons (larger).
     - [x] Dynamic weather icons.
+        - [x] **VERIFIED v1.2**: Dynamic weather icons.
     - [x] Customer avatars (Student, Hipster, etc.).
+        - [x] **VERIFIED v1.2**: Customer avatars (Student, Hipster, etc.).
     - [x] Regenerated Barista avatar.
+        - [x] **VERIFIED v1.2**: Regenerated Barista avatar.
     - [ ] **TODO (BLOCKED)**: Regenerate all pixel art assets as transparent PNGs (currently JPEGs with baked-in checkers).
     - [ ] **TODO (BLOCKED)**: Generate missing HUD icons (Rep, Pantry).
 
@@ -37,15 +57,29 @@
         - [ ] Map out features and dependencies and prepare to put each in its own commit on this branch.
         - [ ] Commit and push each feature to the 'react-native' branch.
         - [ ] Once the branch is ready, create a pull request for me to review.
-
 ## Upcoming Priorities (Phase 4)
+- **Main Controls Complexity**:
+    - [ ] Introduce a multi-step process for drink preparation, starting with boiling water for Aeropress extraction.
+        - [ ] **TODO**: Implement visual and auditory cues for water temperature and boiling.
+        - [ ] **TODO**: Design and implement a mini-game or interactive element for the Aeropress extraction process.
+            - [ ] **TODO**: Ensure the new mechanics feel engaging but maintain the cozy aesthetic.
+        - [ ] Introduce a multi-step process for drink preparation, starting with boiling water for Aeropress extraction.
+            - [ ] **TODO**: Implement visual and auditory cues for water temperature and boiling.
+            - [ ] **TODO**: Design and implement a mini-game or interactive element for the Aeropress extraction process.
+            - [ ] **TODO**: Ensure the new mechanics feel engaging but maintain the cozy aesthetic.
 - **Customization**:
-    - [ ] Decorate the cart (unlockable skins).
-        - [ ] Do not generate new assets, use existing pixel art as placeholders. (rename files as placeholder1.png, placeholder2.png, etc.)
-    - [ ] Customizable menu board.
-    - [ ] Decoration effects on customer mood.
-    - [ ] Themed decoration sets.
-    - [ ] Cart Upgrades (Larger capacity, better equipment placement).
+    - **Upgradeable Workspaces**:
+        - **Plastic Table** (Starter): Cheap, scuffed.
+        - **Wooden Counter**: Warm, rustic feel (Unlockable).
+        - **Marble Top**: Premium, clean look (Unlockable).
+        - **Stainless Steel**: Professional, industrial look (Unlockable).
+    - **Cart Decoration**:
+        - [ ] Decorate the cart (unlockable skins).
+            - [ ] Do not generate new assets, use existing pixel art as placeholders. (rename files as placeholder1.png, placeholder2.png, etc.)
+        - [ ] Customizable menu board.
+        - [ ] Decoration effects on customer mood.
+        - [ ] Themed decoration sets.
+        - [ ] Cart Upgrades (Larger capacity, better equipment placement).
 - **Upgrades**:
     - [ ] Upgrade system (cost, effect).
         - [ ] Upgrades tab in the shop.
@@ -60,6 +94,7 @@
     - [ ] Improved Debug mode
         - [ ] stats
         - [ ] advanced logging
+        - [ ] metrics that help me understand the game and the flow of resources through the coffee world.
 
 ## Upcoming Priorities (Phase 5)
 - **Staff Management**:

@@ -9,4 +9,8 @@
 7.  [x] Change the requirements from playtime to money made
 8.  [x] Improve the gifs to be more dynamic.
 9.  [x] Remove the grey checker from behind the barista avatar picture.
-10. [x] Add customer avatar for each customer and show it when they place their order.
+10. [x] Add customer avatar for each customer and show it when they place their order.  
+11. [ ] remove the save game button and just auto save every 30 seconds.
+12. [ ] make a hover tooltip for all hud buttons to show the name of the button and a description of what it does.
+13. [ ] bring back the coffee-menu popover intro andsettings menu.
+14. [ ] 
