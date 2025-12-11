@@ -71,6 +71,40 @@ export const useGame = () => {
 
     // --- ACTIONS ---
 
+    // SAVE SYSTEM (Hoisted for dependency)
+    const saveGame = useCallback((silent = false) => {
+        const fullState = {
+            ...gameMeta,
+            time: time.timeState.time,
+            day: time.timeState.day,
+            minutesElapsed: time.timeState.minutesElapsed,
+            gameStarted: time.timeState.gameStarted,
+
+            cash: inventory.inventoryState.cash,
+            inventory: inventory.inventoryState.inventory,
+            decorations: inventory.inventoryState.decorations,
+            upgrades: inventory.inventoryState.upgrades,
+            purchaseHistory: inventory.inventoryState.purchaseHistory,
+
+            currentCustomer: customers.customerState.currentCustomer,
+            stats: customers.customerState.stats,
+            marketTrends: customers.customerState.marketTrends,
+            weather: customers.customerState.weather,
+
+            brewingState: brewing.brewingState,
+
+            settings: audio.settings // Includes volumes
+        };
+
+        localStorage.setItem('baristaSimSave', JSON.stringify(fullState));
+        if (!silent) {
+            addLog("Game Saved!", 'success');
+            audio.playSound('success');
+        }
+    }, [gameMeta, time.timeState, inventory.inventoryState, customers.customerState, brewing.brewingState, audio.settings, addLog, audio.playSound]);
+
+
+
     const toggleMuteAll = useCallback((muted) => {
         setSettings(prev => ({ ...prev, muteAll: muted }));
     }, []);
@@ -99,10 +133,14 @@ export const useGame = () => {
                 audio.stopMusic();
                 audio.stopAmbience();
             }
+
+            // Initial Save to lock in "Game Started" state
+            setTimeout(() => saveGame(true), 100);
+
         } catch (e) {
             console.error("startGame error:", e);
         }
-    }, [audio, time, settings]);
+    }, [audio, time, settings, saveGame]);
 
     const toggleModal = useCallback((modalName) => {
         if (!audio.settings.muteAll) audio.playSound('action');
@@ -323,8 +361,9 @@ export const useGame = () => {
 
         addLog(`Served ${customer.name}! +$${total.toFixed(2)}`, 'success');
         audio.playSound('success');
+        saveGame(true); // Auto-save on serve
 
-    }, [brewing, inventory, customers, addLog, audio]);
+    }, [brewing, inventory, customers, addLog, audio, saveGame]);
 
     // Shop Wrapper
     const handleBuyWrapper = useCallback((itemKey, amount) => {
@@ -338,7 +377,8 @@ export const useGame = () => {
             else if (result.reason === 'insufficient_funds') addLog("Not enough cash!", 'error');
             audio.playSound('error');
         }
-    }, [inventory, addLog, audio]);
+        if (result.success) saveGame(true); // Auto-save on purchase
+    }, [inventory, addLog, audio, saveGame]);
 
     // Upgrade Wrapper
     const buyUpgradeWrapper = useCallback((upgradeId) => {
@@ -350,7 +390,8 @@ export const useGame = () => {
             addLog("Cannot purchase upgrade (Cost/Rep too low)", 'error');
             audio.playSound('error');
         }
-    }, [inventory, customers, addLog, audio]);
+        if (result.success) saveGame(true); // Auto-save
+    }, [inventory, customers, addLog, audio, saveGame]);
 
     // Dialogue Choice Handler
     const handleDialogueChoice = useCallback((choice) => {
@@ -409,39 +450,7 @@ export const useGame = () => {
     }, [time, customers, addLog, audio]);
 
 
-    // SAVE SYSTEM
-    // We need to construct the full object to save
-    const saveGame = useCallback((silent = false) => {
-        const fullState = {
-            ...gameMeta,
-            time: time.timeState.time,
-            day: time.timeState.day,
-            minutesElapsed: time.timeState.minutesElapsed,
-            gameStarted: time.timeState.gameStarted,
 
-            cash: inventory.inventoryState.cash,
-            inventory: inventory.inventoryState.inventory,
-            decorations: inventory.inventoryState.decorations,
-            upgrades: inventory.inventoryState.upgrades,
-            purchaseHistory: inventory.inventoryState.purchaseHistory,
-
-            currentCustomer: customers.customerState.currentCustomer,
-            stats: customers.customerState.stats,
-            marketTrends: customers.customerState.marketTrends,
-            weather: customers.customerState.weather,
-
-            brewingState: brewing.brewingState,
-
-            settings: audio.settings // Includes volumes
-        };
-
-        // console.log("Saving game...", fullState); // Reduced spam
-        localStorage.setItem('baristaSimSave', JSON.stringify(fullState));
-        if (!silent) {
-            addLog("Game Saved!", 'success');
-            audio.playSound('success');
-        }
-    }, [gameMeta, time.timeState, inventory.inventoryState, customers.customerState, brewing.brewingState, audio.settings, addLog, audio.playSound]);
 
     // Destructure stable sync functions to avoid circular dependencies in loadGame
     const { syncTimeState } = time;
