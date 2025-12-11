@@ -1,5 +1,5 @@
 export const BrewingVisuals = ({ gameState }) => {
-    const { mode, step } = gameState.brewingState;
+    const { mode, step, isBoiling } = gameState.brewingState;
 
     // Helper for coffee state class specifically
     const getCoffeeStateClass = () => {
@@ -28,7 +28,7 @@ export const BrewingVisuals = ({ gameState }) => {
                                 <div className="rubber-seal"></div> {/* Seal attached to plunger */}
                             </div>
                         </div>
-                        <div className={`kettle ${step === 0 ? 'boiling' : (step === 2 ? 'pouring' : '')}`}></div>
+                        <div className={`kettle ${isBoiling ? 'boiling' : (step === 2 ? 'pouring' : '')}`}></div>
                         <div className={`cup ${step >= 5 ? 'filled' : ''}`}>
                             <div className="steam-container">
                                 <div className="steam-puff"></div>
@@ -70,13 +70,15 @@ export const BrewingVisuals = ({ gameState }) => {
 };
 
 export const BrewingControls = ({ gameState, handleBrewAction, performServe, toggleModal, dialogue }) => {
-    const { mode, step } = gameState.brewingState;
+    const { mode, step, isBoiling } = gameState.brewingState;
 
     return (
         <div id="controls-area" className="controls-area">
             {mode === 'coffee' && (
                 <div id="coffee-controls" className="control-group">
-                    <button className="btn" onClick={() => handleBrewAction('BOIL')} disabled={step > 0}>Boil Water</button>
+                    <button className="btn" onClick={() => handleBrewAction('BOIL')} disabled={step > 0 || isBoiling}>
+                        {isBoiling ? 'Boiling...' : 'Boil Water'}
+                    </button>
                     <div className="arrow">→</div>
                     <button className="btn" onClick={() => handleBrewAction('GRIND')} disabled={step !== 1}>Grind Beans</button>
                     <div className="arrow">→</div>

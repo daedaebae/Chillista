@@ -157,9 +157,16 @@ export const useGame = () => {
 
         if (mode === 'coffee') {
             if (action === 'BOIL' && step === 0) {
-                brewing.advanceStep();
-                addLog("Water boiling...", 'neutral');
+                brewing.setBoiling(true);
+                addLog("Heating water...", 'neutral');
                 audio.playSteam();
+
+                setTimeout(() => {
+                    brewing.setBoiling(false);
+                    brewing.advanceStep();
+                    addLog("Water hot!", 'success');
+                    // audio.playSound('boil_finish'); // Optional: distinct sound
+                }, 3000);
             } else if (action === 'GRIND' && step === 1) {
                 if (inventory.deductResources({ 'beans_standard': 20 })) {
                     brewing.advanceStep();

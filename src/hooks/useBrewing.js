@@ -4,11 +4,12 @@ export const useBrewing = () => {
     const [brewingState, setBrewingState] = useState({
         mode: 'coffee',
         step: 0,
-        beanType: null
+        beanType: null,
+        isBoiling: false // New state
     });
 
     const setMode = useCallback((mode) => {
-        setBrewingState(prev => ({ ...prev, mode, step: 0, beanType: null }));
+        setBrewingState(prev => ({ ...prev, mode, step: 0, beanType: null, isBoiling: false }));
     }, []);
 
     const advanceStep = useCallback((beanType = null) => {
@@ -19,21 +20,24 @@ export const useBrewing = () => {
         }));
     }, []);
 
+    const setBoiling = useCallback((isBoiling) => {
+        setBrewingState(prev => ({ ...prev, isBoiling }));
+    }, []);
+
     const resetBrewing = useCallback(() => {
-        setBrewingState(prev => ({ ...prev, step: 0, beanType: null }));
+        setBrewingState(prev => ({ ...prev, step: 0, beanType: null, isBoiling: false }));
     }, []);
 
     const syncBrewingState = useCallback((savedState) => {
-        // brewingState might not need saving if we don't save mid-brew?
-        // Actually we do save entire state.
-        setBrewingState(savedState);
+        setBrewingState({ ...savedState, isBoiling: false }); // Always reset boiling on load
     }, []);
 
     return useMemo(() => ({
         brewingState,
         setMode,
         advanceStep,
+        setBoiling, // Export
         resetBrewing,
         syncBrewingState
-    }), [brewingState, setMode, advanceStep, resetBrewing, syncBrewingState]);
+    }), [brewingState, setMode, advanceStep, setBoiling, resetBrewing, syncBrewingState]);
 };
