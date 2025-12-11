@@ -27,12 +27,12 @@ export default function CharacterArea({ currentCustomer, minutesElapsed }) {
                         bottom: '80px',
                         right: '-10px',
                         background: '#fff',
-                        border: currentCustomer.patience < 2 ? '2px solid red' : '2px solid #5d4037',
+                        border: currentCustomer.patience < 5 ? '2px solid red' : (currentCustomer.patience < 10 ? '2px solid orange' : '2px solid #5d4037'),
                         borderRadius: '12px',
                         padding: '2px 8px',
                         fontSize: '0.8rem',
                         fontWeight: 'bold',
-                        color: waitTime > 10 ? '#d32f2f' : (waitTime > 8 ? '#f57f17' : '#3e2723'),
+                        color: currentCustomer.patience < 5 ? '#d32f2f' : (currentCustomer.patience < 10 ? '#f57f17' : '#3e2723'),
                         zIndex: 20,
                         display: 'flex',
                         alignItems: 'center',
@@ -42,7 +42,7 @@ export default function CharacterArea({ currentCustomer, minutesElapsed }) {
                     }}>
                         <span style={{ color: '#5d4037' }}>{currentCustomer.name}</span>
                         <span>|</span>
-                        <span>⏱ {Math.floor(waitTime)}:{(Math.floor((waitTime * 60) % 60)).toString().padStart(2, '0')}</span>
+                        <span>⏱ {Math.floor(currentCustomer.patience)}m</span>
                     </div>
 
                     <div id="customer-info-panel" className="customer-info-panel" style={{

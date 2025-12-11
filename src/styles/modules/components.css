@@ -496,22 +496,25 @@
 
 /* Brewing Station */
 /* Brewing Station */
+/* Brewing Station - Consolidated */
 .brewing-station {
     position: absolute;
     bottom: 20px;
-    left: 140px;
-    /* Moved from Right > Left to sit next to Barista */
-    width: 300px;
-    height: 400px;
-    background: rgba(255, 250, 240, 0.85);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 520px;
+    height: 500px;
+    background: rgba(62, 39, 35, 0.9);
+    border: 4px solid #5d4037;
     border-radius: 12px;
     z-index: 22;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     transition: all 0.3s ease;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .chamber {
@@ -520,7 +523,7 @@
     background: rgba(255, 255, 255, 0.3);
     border: 3px solid var(--text-color);
     border-radius: 0 0 8px 8px;
-    position: relative;
+    position: absolute;
     overflow: hidden;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -703,27 +706,7 @@
 }
 
 /* Brewing Station */
-.brewing-station {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 520px;
-    /* Expanded from 200px */
-    height: 500px;
-    /* Expanded from 220px */
-    background: rgba(62, 39, 35, 0.9);
-    border: 4px solid #5d4037;
-    border-radius: 12px;
-    z-index: 22;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    padding-bottom: 20px;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-}
+/* Brewing Station Main Style is defined above */
 
 /* Station Layout */
 .aeropress {
@@ -1298,13 +1281,19 @@
     }
 
     /* Scale down brewing station */
+    /* Scale down brewing station */
     .brewing-station {
-        width: 160px;
-        /* Smaller station */
-        right: 10px;
-        /* Closer to edge */
-        bottom: 120px;
-        /* Move up to avoid controls */
+        width: 520px;
+        /* Keep original size for internal layout */
+        height: 500px;
+        left: auto;
+        right: -140px;
+        /* Shift right */
+        bottom: 80px;
+        /* Above controls */
+        transform: scale(0.5);
+        /* Scale down entire vector assembly */
+        transform-origin: bottom center;
     }
 
     /* Adjust controls area */

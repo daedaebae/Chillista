@@ -91,8 +91,8 @@ export const useCustomers = () => {
             else if (customerState.weather === 'sunny') basePatience *= 1.1;
 
             // Difficulty Modifier
-            if (difficulty === 'cozy') basePatience += 5;
-            if (difficulty === 'extreme') basePatience -= 5;
+            if (difficulty === 'cozy') basePatience += 10; // More patience in cozy
+            if (difficulty === 'extreme') basePatience -= 5; // Less patience in extreme
 
             basePatience = Math.max(5, Math.floor(basePatience));
 
@@ -109,7 +109,7 @@ export const useCustomers = () => {
                 order,
                 patience: basePatience,
                 maxPatience: basePatience,
-                decay: 1.0, // 1 minute = 1 minute
+                decay: difficulty === 'extreme' ? 1.2 : 1.0, // Faster decay in extreme
                 satisfaction: 50,
                 arrivalTime: minutesElapsed,
                 avatar

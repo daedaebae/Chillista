@@ -508,16 +508,16 @@ export const useGame = () => {
     useEffect(() => {
         let interval;
         if (time.timeState.gameStarted && !gameMeta.debug.timePaused) {
-            let speed = gameMeta.debug.timeSpeed || 1;
+            let intervalTime = 100; // Base 100ms
 
-            // Difficulty Modifier
+            // Difficulty Modifier for Speed
             const difficulty = settings.difficulty || 'cozy';
-            if (difficulty === 'cozy') speed *= 0.8; // Slower
-            else if (difficulty === 'extreme') speed *= 1.5; // Faster
+            if (difficulty === 'cozy') intervalTime = 125; // Slower (0.8x)
+            else if (difficulty === 'extreme') intervalTime = 66; // Faster (1.5x)
 
             interval = setInterval(() => {
                 advanceTimeWrapper(0.1); // Smaller tick
-            }, 100 / speed); // Faster interval (100ms)
+            }, intervalTime);
         }
         return () => clearInterval(interval);
     }, [time.timeState.gameStarted, gameMeta.debug.timePaused, gameMeta.debug.timeSpeed, advanceTimeWrapper, settings.difficulty]);

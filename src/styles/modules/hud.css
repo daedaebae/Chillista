@@ -165,3 +165,28 @@
 .settings-toggle {
     right: 120px;
 }
+
+/* Mobile Responsive HUD */
+@media (max-width: 768px) {
+    .hud-horizontal {
+        padding: 0.4rem 0.8rem;
+        gap: 0.4rem;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        white-space: nowrap;
+        scrollbar-width: none;
+        /* Hide scrollbar for cleaner look */
+    }
+
+    .hud-horizontal::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hud-item {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        min-width: max-content;
+        /* Ensure items don't squish */
+    }
+}
