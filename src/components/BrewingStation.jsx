@@ -24,17 +24,25 @@ export const BrewingVisuals = ({ gameState }) => {
                     <div className={`station ${getCoffeeStateClass()}`}>
                         <div className={`hand-grinder ${step === 1 ? 'grinding' : ''}`}>
                             <div className="handle"></div>
+                            {step === 1 && <div className="comic-popup">CRUNCH!</div>}
                         </div>
                         <div className="aeropress">
                             <div className="chamber">
                                 <div className={`contents`}></div>
                                 <div className="filter-cap"></div> {/* Real Filter Cap */}
+                                {step === 3 && <div className="water-pour-effect"></div>} {/* Water Stream */}
                             </div>
                             <div className={`plunger ${step >= 5 ? 'plunged' : ''}`}>
                                 <div className="rubber-seal"></div> {/* Seal attached to plunger */}
+                                {step === 5 && <div className="comic-popup hiss">HISSS!</div>}
                             </div>
                         </div>
-                        <div className={`kettle ${isBoiling ? 'boiling' : (step === 2 ? 'pouring' : '')}`}></div>
+                        <div className={`kettle ${isBoiling ? 'boiling' : (step === 3 ? 'pouring' : '')}`}>
+                            {/* Step 3 is Add Water now (was 2 before logic split?) need to verify step numbers */}
+                            {isBoiling && <div className="comic-popup boil">RUMBLE!</div>}
+                        </div>
+                        {step === 3 && <div className="comic-popup splash">SPLASH!</div>}
+
                         <div className={`cup ${step >= 5 ? 'filled' : ''}`}>
                             <div className="steam-container">
                                 <div className="steam-puff"></div>

@@ -5,11 +5,9 @@ Welcome to the **Chillista** documentation! This wiki serves as the central hub 
 ## Table of Contents
 
 ### 🎮 For Players
--   **[Game Mechanics](Game_Mechanics.md)**
-    -   How to Brew (Coffee, Espresso, Matcha)
-    -   Customers & Patience
-    -   Shop & Upgrades
-    -   Cart Customization
+-   [Game Mechanics](Game_Mechanics.md)
+-   [Cart Designer (Prequel)](Cart_Designer.md)
+-   [Reputation System](Reputation_System.md)
 
 -   **[Roadmap](Roadmap.md)**
     -   Planned Features

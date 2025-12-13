@@ -475,6 +475,8 @@
     position: absolute;
     overflow: hidden;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    /* Glass on top */
 }
 
 .contents {
@@ -690,6 +692,166 @@
     z-index: 5;
 }
 
+/* Comic Popup Styles */
+.comic-popup {
+    position: absolute;
+    background: #fff;
+    border: 3px solid #000;
+    padding: 5px 10px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #000;
+    border-radius: 50%;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    white-space: nowrap;
+}
+
+.comic-popup.hiss {
+    top: 50%;
+    right: -60px;
+    background: #fff9c4;
+    transform: rotate(15deg);
+}
+
+.comic-popup.splash {
+    top: 0;
+    left: -40px;
+    background: #e1f5fe;
+    transform: rotate(-10deg);
+}
+
+.comic-popup.boil {
+    top: -50px;
+    right: 0px;
+    background: #ffebee;
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.2) rotate(var(--rotation, 10deg));
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1) rotate(var(--rotation, 0deg));
+        opacity: 1;
+    }
+}
+
+/* Kettle Animations */
+.kettle {
+    width: 80px;
+    height: 70px;
+    background: #bcaaa4;
+    /* Silver/Metal color */
+    border-radius: 50% 50% 10% 10%;
+    position: absolute;
+    top: -60px;
+    /* Above Aeropress */
+    right: -100px;
+    opacity: 0;
+    transition: all 0.5s ease;
+    border: 2px solid #5d4037;
+    z-index: 20;
+}
+
+.kettle::before {
+    /* Handle */
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    width: 40px;
+    height: 30px;
+    border: 4px solid #3e2723;
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+}
+
+.kettle::after {
+    /* Spout */
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: -15px;
+    width: 20px;
+    height: 10px;
+    background: #bcaaa4;
+    transform: rotate(-30deg);
+    border: 2px solid #5d4037;
+}
+
+.kettle.boiling {
+    opacity: 1;
+    animation: rattle 0.1s linear infinite;
+}
+
+.kettle.pouring {
+    opacity: 1;
+    transform: translateX(-80px) rotate(-45deg);
+    top: -40px;
+    /* Move down slightly */
+}
+
+@keyframes rattle {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    25% {
+        transform: translate(-1px, 0);
+    }
+
+    75% {
+        transform: translate(1px, 0);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+/* Water Pour Effect */
+.water-pour-effect {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 0;
+    background: rgba(0, 191, 255, 0.6);
+    /* Blue water */
+    animation: pourStream 1.5s ease forwards;
+    z-index: 12;
+    /* Inside chamber */
+}
+
+@keyframes pourStream {
+    0% {
+        height: 0;
+        top: -50px;
+    }
+
+    50% {
+        height: 100%;
+        top: 0;
+    }
+
+    100% {
+        height: 0;
+        top: 100%;
+        opacity: 0;
+    }
+}
+
 /* Plunger Visuals */
 .plunger {
     width: 86px;
@@ -704,7 +866,8 @@
     /* Start sitting exactly on top of the 140px chamber */
     position: relative;
     left: 0px;
-    z-index: 2;
+    z-index: 5;
+    /* Behind Glass (10), In front of contents? */
 }
 
 .plunging-active {

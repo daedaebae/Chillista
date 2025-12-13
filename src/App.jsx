@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Tooltip from './components/Tooltip';
 import { useGame } from './hooks/useGame';
 import DebugModal from './components/DebugModal';
@@ -22,12 +22,16 @@ import DaySummaryModal from './components/DaySummaryModal';
 import DialogueOverlay from './components/DialogueOverlay';
 
 import CharacterArea from './components/CharacterArea';
+import CartDesigner from './components/CartDesigner/CartDesigner';
 
 import pixelCafeBg from './assets/backgrounds/pixel_cafe_bg.png';
 
 function App() {
   const game = useGame();
   const { uiState, toggleModal, startGame } = game;
+  const [gameStage, setGameStage] = useState('main'); // Default to main
+  const [tempPlayerName, setTempPlayerName] = useState('Barista');
+
   // Expose game to window for debugging
   useEffect(() => {
     window.game = game;
@@ -52,6 +56,23 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [game]);
+
+  const handleIntroComplete = (name) => {
+    setTempPlayerName(name);
+    setGameStage('designer');
+  };
+
+  const handleDesignerComplete = (designData) => {
+    console.log("Cart Design Complete:", designData);
+    // Start the main game with the name collected earlier
+    // FUTURE: Pass designData stats to startGame to affect gameplay
+    startGame(tempPlayerName);
+    setGameStage('main');
+  };
+
+  if (gameStage === 'designer') {
+    return <CartDesigner onGameStart={handleDesignerComplete} />;
+  }
 
   return (
     <div className="game-container">
@@ -96,7 +117,7 @@ function App() {
       {/* Modals */}
       <IntroModal
         isOpen={uiState.activeModal === 'intro'}
-        onStart={startGame}
+        onStart={handleIntroComplete}
       />
       <ShopModal
         isOpen={uiState.activeModal === 'shop'}

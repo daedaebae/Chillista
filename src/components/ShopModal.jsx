@@ -78,22 +78,26 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                             </div>
                         )}
 
-                        {SHOP_ITEMS.map(item => (
-                            <div key={item.key} className="shop-item">
-                                <div className="icon">{item.icon}</div>
-                                <div className="details">
-                                    <h3>{item.name}</h3>
-                                    <p>{item.desc}</p>
+                        {SHOP_ITEMS.map(item => {
+                            const canAfford = cash >= item.cost;
+                            return (
+                                <div key={item.key} className={`shop-item ${canAfford ? '' : 'disabled'}`}>
+                                    <div className="icon">{item.icon}</div>
+                                    <div className="details">
+                                        <h3>{item.name}</h3>
+                                        <p>{item.desc}</p>
+                                    </div>
+                                    <button
+                                        className="btn buy"
+                                        onClick={() => handleBuy(item.key, item.amount)}
+                                        disabled={!canAfford}
+                                        style={!canAfford ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                                    >
+                                        Buy
+                                    </button>
                                 </div>
-                                <button
-                                    className="btn buy"
-                                    onClick={() => handleBuy(item.key, item.amount)}
-                                    disabled={false}
-                                >
-                                    Buy
-                                </button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
 
@@ -102,9 +106,10 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                         {UPGRADES.map(upgrade => {
                             const isOwned = upgrades.includes(upgrade.id);
                             const isLocked = stats.reputation < upgrade.rep;
+                            const canAfford = cash >= upgrade.cost;
 
                             return (
-                                <div key={upgrade.id} className={`shop-item ${isOwned ? 'owned' : ''} ${isLocked ? 'locked' : ''}`}>
+                                <div key={upgrade.id} className={`shop-item ${isOwned ? 'owned' : ''} ${isLocked ? 'locked' : ''} ${!canAfford && !isOwned ? 'disabled' : ''}`}>
                                     <div className="icon">{upgrade.icon}</div>
                                     <div className="details">
                                         <h3>{upgrade.name}</h3>
@@ -116,9 +121,9 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                                     <button
                                         className="btn buy"
                                         onClick={() => buyUpgrade(upgrade.id)}
-                                        disabled={isOwned || isLocked}
+                                        disabled={isOwned || isLocked || !canAfford}
                                     >
-                                        {isOwned ? 'Owned' : (isLocked ? 'Locked' : 'Buy')}
+                                        {isOwned ? 'Owned' : (isLocked ? 'Locked' : (!canAfford ? 'Too Expensive' : 'Buy'))}
                                     </button>
                                 </div>
                             );
@@ -137,9 +142,10 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                             const skinId = skin.key.toLowerCase().replace('_', '-');
                             const isEquipped = activeSkin === skinId;
                             const isOwned = decorations.includes(skinId);
+                            const canAfford = cash >= skin.cost;
 
                             return (
-                                <div key={skin.key} className={`shop-item ${isEquipped ? 'equipped' : ''} ${isOwned ? 'owned' : ''}`}>
+                                <div key={skin.key} className={`shop-item ${isEquipped ? 'equipped' : ''} ${isOwned ? 'owned' : ''} ${!canAfford && !isOwned ? 'disabled' : ''}`}>
                                     <div className="icon">{skin.icon}</div>
                                     <div className="details">
                                         <h3>{skin.name}</h3>
@@ -149,8 +155,8 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                                     <button
                                         className="btn buy"
                                         onClick={() => handleBuy(skin.key, 1)}
-                                        disabled={isEquipped || (isOwned ? false : false)}
-                                        style={isEquipped ? { background: '#8d6e63', borderColor: '#5d4037' } : {}}
+                                        disabled={isEquipped || (isOwned ? false : !canAfford)}
+                                        style={isEquipped ? { background: '#8d6e63', borderColor: '#5d4037' } : (!isOwned && !canAfford ? { opacity: 0.5, cursor: 'not-allowed' } : {})}
                                     >
                                         {isEquipped ? 'Equipped' : (isOwned ? 'Equip' : 'Buy')}
                                     </button>
@@ -163,9 +169,10 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                             const itemId = item.key.toLowerCase();
                             const isEquipped = activeCounter === itemId;
                             const isOwned = decorations.includes(itemId);
+                            const canAfford = cash >= item.cost;
 
                             return (
-                                <div key={item.key} className={`shop-item ${isEquipped ? 'equipped' : ''} ${isOwned ? 'owned' : ''}`}>
+                                <div key={item.key} className={`shop-item ${isEquipped ? 'equipped' : ''} ${isOwned ? 'owned' : ''} ${!canAfford && !isOwned ? 'disabled' : ''}`}>
                                     <div className="icon">{item.icon}</div>
                                     <div className="details">
                                         <h3>{item.name}</h3>
@@ -175,8 +182,8 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                                     <button
                                         className="btn buy"
                                         onClick={() => handleBuy(item.key, 1)}
-                                        disabled={isEquipped || (isOwned ? false : false)}
-                                        style={isEquipped ? { background: '#8d6e63', borderColor: '#5d4037' } : {}}
+                                        disabled={isEquipped || (isOwned ? false : !canAfford)}
+                                        style={isEquipped ? { background: '#8d6e63', borderColor: '#5d4037' } : (!isOwned && !canAfford ? { opacity: 0.5, cursor: 'not-allowed' } : {})}
                                     >
                                         {isEquipped ? 'Equipped' : (isOwned ? 'Equip' : 'Buy')}
                                     </button>

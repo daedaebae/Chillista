@@ -6,7 +6,17 @@ import { useCustomers } from './useCustomers.js';
 import { useBrewing } from './useBrewing.js';
 import { useDialogue } from './useDialogue.js';
 
-export const useGame = () => {
+/**
+ * useGame Hook
+ * 
+ * The central engine of the Chillista game.
+ * Manages the main game loop, time progression, customer generation,
+ * brewing state, and UI modal states.
+ * 
+ * @param {Object} initialState - Optional initial state for loading saved games.
+ * @returns {Object} Game API object containing state and action functions.
+ */
+export const useGame = (initialState) => {
     // Load save synchronously for initial state to prevent flash
     const savedString = localStorage.getItem('baristaSimSave');
     const savedGame = savedString ? JSON.parse(savedString) : null;
@@ -232,6 +242,8 @@ export const useGame = () => {
                     // deductResources now returns TRUE always (negative inv). So this block always runs!
                     // The "else" block is now unreachable with my useInventory change.
                 }
+            }
+            else if (action === 'ADD_WATER') {
                 if (inventory.deductResources({ 'water': 250 })) {
                     brewing.setStrictStep(3); // Jump to "Water Added"
                     if (brewing.brewingState.waterTemp === 'hot') {
@@ -313,11 +325,12 @@ export const useGame = () => {
         // Logic
         const customer = customers.customerState.currentCustomer;
         let quality = 0.1; // Default for unfinished/swill (Hard Mode)
+        let feedback = "Customer: ...";
 
         if (ready) {
             // Check Water Temp
             if (brewing.brewingState.waterTemp !== 'hot' && (mode === 'coffee' || mode === 'matcha')) {
-                quality = 0.5; // Cold Water Penalty (Unfinished/Bad)
+                quality = 0.4; // Cold Water Penalty (Poor)
                 addLog("Served cold drink... (Forgot to boil!)", 'neutral');
             } else {
                 quality = 1.0;
@@ -333,38 +346,69 @@ export const useGame = () => {
             addLog("Served unfinished drink...", 'neutral');
         }
 
-        const patienceBonus = customer.patience > 20 ? 1.2 : 1.0;
+        // Feedback Tiers
+        let feedbackLog = "";
+        let repChange = 0;
+        let tipMultiplier = 1.0;
+
+        if (quality < 0.5) {
+            feedback = "Customer: This is terrible!";
+            feedbackLog = "Rate: POOR 😞";
+            repChange = -2;
+            tipMultiplier = 0;
+        } else if (quality < 1.0) {
+            feedback = "Customer: Not bad.";
+            feedbackLog = "Rate: GOOD 🙂";
+            repChange = 1;
+            tipMultiplier = 1.0;
+        } else if (quality < 1.3) {
+            feedback = "Customer: Thanks, that hits the spot.";
+            feedbackLog = "Rate: SATISFACTORY 😋";
+            repChange = 2; // Increased for Satisfactory
+            tipMultiplier = 1.2;
+        } else {
+            feedback = "Customer: Wow! This is amazing!";
+            feedbackLog = "Rate: OUTSTANDING 🤩";
+            repChange = 3;
+            tipMultiplier = 2.5; // Big tip for outstanding
+        }
+
+        addLog(feedback, 'neutral');
+
+        const patienceBonus = customer.patience > 20 ? 1.2 : 1.0; // Bonus multiplier for price
         const basePrice = 4.00;
-        const tip = (customer.patience / 10) * 0.5;
+
+        // Tip Logic
+        let tip = (customer.patience / 10) * 0.5; // Base patience tip
+        tip = tip * tipMultiplier;
 
         // Calculate Total
         let total = (basePrice * quality * patienceBonus) + tip;
         if (isFree) total = 0; // On the House!
 
-        let repChange = 0;
-        if (quality >= 1.0 && patienceBonus > 1.0) repChange = 1;
-        else if (quality < 0.5) repChange = -1;
-
-        // On The House Bonus
+        // On The House Bonus Logic
         if (isFree) {
             if (quality >= 0.8) {
-                repChange += 2; // Small rep boost for generosity (+1 base + 2 bonus = 3 total)
+                repChange += 2; // Bonus Rep
                 addLog("Customer loved the free drink! (+Rep)", 'success');
             } else {
-                addLog("It was free, but they clearly didn't enjoy it.", 'neutral');
+                addLog("It was free, but they didn't enjoy it.", 'neutral');
+                repChange = 0; // No rep penalty for free bad drink, but no gain
             }
         }
 
         // Effects
         inventory.addCash(total);
-        inventory.deductResources({ 'cups': 1 }); // We checked before, so this should pass. (Now allows negative)
+        inventory.deductResources({ 'cups': 1 });
         customers.updateStats(total, isFree ? 0 : tip, repChange, customer.name);
         customers.clearCustomer();
         brewing.resetBrewing();
 
-        const logMsg = isFree ? `Served ${customer.name} (On the House)!` : `Served ${customer.name}! +$${total.toFixed(2)}`;
+        const logMsg = isFree ? `Served ${customer.name} (On the House)!` : `Served ${customer.name}! +$${total.toFixed(2)} (${feedbackLog})`;
         addLog(logMsg, 'success');
-        audio.playSound('success');
+        if (tip > 0 && !isFree) addLog(`Tip: $${tip.toFixed(2)}`, 'success');
+
+        audio.playSound(quality > 0.8 ? 'success' : 'neutral'); // Better sound for better drinks?
         saveGame(true); // Auto-save on serve
 
     }, [brewing, inventory, customers, addLog, audio, saveGame]);

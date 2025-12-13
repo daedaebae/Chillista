@@ -107,6 +107,14 @@ export const useInventory = (initialState) => {
                 return prev;
             }
 
+            // Enforce Funds Check (Fix_First #7)
+            if (prev.cash < item.cost) {
+                result = { success: false, reason: 'insufficient_funds', item };
+                // Do not return early if we want to log it? usage inside setInventoryState implies we return state.
+                // If we return prev, state doesn't change.
+                return prev;
+            }
+
             const newInventory = { ...prev.inventory };
             const newDecorations = [...prev.decorations];
             let newActiveSkin = prev.activeSkin;
@@ -152,9 +160,12 @@ export const useInventory = (initialState) => {
         let result = { success: false };
 
         setInventoryState(prev => {
-            // Allow upgrade debt too? Sure, user said "bankrupting themselves".
-            // But reputation check should arguably stay? "not having enough money" was the specific allowance.
-            // I'll keep rep check as it's an "unlock", not a resource.
+            // Funds Check
+            if (prev.cash < upgrade.cost) {
+                result = { success: false, reason: 'insufficient_funds' }; // Return error reason
+                return prev;
+            }
+
             if (reputation >= upgrade.rep) {
                 result = { success: true, upgrade };
                 return {
