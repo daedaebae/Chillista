@@ -1,5 +1,7 @@
+
 import { useState, useCallback, useMemo } from 'react';
 import pixelCustomer1 from '../assets/characters/pixel_customer_1.png';
+import { CHARACTER_ROSTER } from '../data/characters';
 
 export const useCustomers = () => {
     const [customerState, setCustomerState] = useState({
@@ -66,51 +68,45 @@ export const useCustomers = () => {
         if (difficulty === 'extreme') arrivalChance *= 1.2;
 
         if (Math.random() > (1 - arrivalChance)) {
-            const names = ['Alice', 'Bob', 'Charlie', 'Dana', 'Eve', 'Frank', 'Grace', 'Heidi', 'Igor', 'Jasmine', 'Ken', 'Liam', 'Mia', 'Noah', 'Olivia'];
-            const name = names[Math.floor(Math.random() * names.length)];
-            const avatar = pixelCustomer1;
+            // Pick a random specific character definition
+            const characterTemplate = CHARACTER_ROSTER[Math.floor(Math.random() * CHARACTER_ROSTER.length)];
 
-            let specialType = null;
-            const rand = Math.random();
-            if (rand < 0.05) specialType = 'critic';
-            else if (rand < 0.2) specialType = 'regular';
-            else if (rand < 0.3) specialType = 'hipster';
-            else if (rand < 0.4) specialType = 'student';
-            else if (rand < 0.5) specialType = 'tourist';
+            const name = characterTemplate.name; // Use roster name
+            const avatar = pixelCustomer1; // Still using placeholder avatar for now
 
-            // Patience in Minutes
-            let basePatience = 20; // Standard
-            if (specialType === 'critic') basePatience = 15;
-            if (specialType === 'regular') basePatience = 30; // Loyal
-            if (specialType === 'student') basePatience = 18;
-            if (specialType === 'tourist') basePatience = 25;
-            if (specialType === 'hipster') basePatience = 15; // Impatient
+            // Determine type based on traits for legacy logic, or map traits to type
+            let specialType = 'default';
+            if (characterTemplate.traits.includes('Trendy')) specialType = 'hipster';
+            if (characterTemplate.traits.includes('Creative')) specialType = 'student'; // approximate
+            if (characterTemplate.traits.includes('Loyal')) specialType = 'regular';
+
+            // Patience Logic based on Character Data
+            let basePatience = characterTemplate.basePatience || 20;
 
             // Weather Modifier
-            if (customerState.weather === 'rainy') basePatience *= 0.9; // Grumpy
+            if (customerState.weather === 'rainy') basePatience *= 0.9;
             else if (customerState.weather === 'sunny') basePatience *= 1.1;
 
             // Difficulty Modifier
-            if (difficulty === 'cozy') basePatience += 10; // More patience in cozy
-            if (difficulty === 'extreme') basePatience -= 5; // Less patience in extreme
+            if (difficulty === 'cozy') basePatience += 10;
+            if (difficulty === 'extreme') basePatience -= 5;
 
             basePatience = Math.max(5, Math.floor(basePatience));
 
-            let order = 'Coffee';
-            if (upgrades.includes('mode_matcha') && (specialType === 'hipster' || Math.random() < 0.3)) {
-                order = 'Matcha Latte';
-            } else if (upgrades.includes('mode_espresso') && Math.random() < 0.3) {
-                order = 'Espresso';
-            }
+            // Preference Logic
+            let order = characterTemplate.preferences.drink;
+            // Override strictly if upgrades missing?
+            if (order === 'Matcha Latte' && !upgrades.includes('mode_matcha')) order = 'Coffee';
+            if (order === 'Espresso' && !upgrades.includes('mode_espresso')) order = 'Coffee';
 
-            newCustomer = {
-                name,
-                type: specialType || 'default',
+            const newCustomer = {
+                ...characterTemplate, // Spread static data (bio, age, traits)
+                type: specialType, // Keep type for now for compatibility
                 order,
-                patience: basePatience,
-                maxPatience: basePatience,
-                decay: difficulty === 'extreme' ? 1.2 : 1.0, // Faster decay in extreme
-                satisfaction: 50,
+                patience: basePatience * 1.2,
+                maxPatience: basePatience * 1.2,
+                decay: difficulty === 'extreme' ? 1.2 : 0.7,
+                satisfaction: 50, // Initial mood
                 arrivalTime: minutesElapsed,
                 avatar
             };
@@ -172,6 +168,28 @@ export const useCustomers = () => {
         setCustomerState(prev => ({ ...prev, lastEvent: null }));
     }, []);
 
+    const resetAllCustomers = useCallback(() => {
+        setCustomerState({
+            currentCustomer: null,
+            stats: {
+                customersServed: 0,
+                tipsEarned: 0,
+                dailyEarnings: 0,
+                cumulativeEarnings: 0,
+                reputation: 0
+            },
+            marketTrends: {
+                beans_standard: [],
+                beans_premium: [],
+                milk: [],
+                matcha_powder: []
+            },
+            customerHistory: {},
+            weather: 'sunny',
+            lastEvent: null
+        });
+    }, []);
+
     const syncCustomerState = useCallback((saved) => {
         setCustomerState(prev => ({
             ...prev,
@@ -190,7 +208,9 @@ export const useCustomers = () => {
         clearCustomer,
         updateStats,
         resetDailyStats,
+
         syncCustomerState,
-        clearEvent
-    }), [customerState, setWeather, updatePatience, generateCustomer, clearCustomer, updateStats, resetDailyStats, syncCustomerState, clearEvent]);
+        clearEvent,
+        resetAllCustomers
+    }), [customerState, setWeather, updatePatience, generateCustomer, clearCustomer, updateStats, resetDailyStats, syncCustomerState, clearEvent, resetAllCustomers]);
 };

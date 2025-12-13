@@ -3,123 +3,92 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Modal from './Modal';
 
+const PAGES = [
+    { id: 'Home', title: '🏠 Home' },
+    { id: 'Game_Mechanics', title: '☕ Mechanics' },
+    { id: 'Development', title: '🛠️ Development' },
+    { id: 'Architecture', title: '🏗️ Architecture' },
+    { id: 'Roadmap', title: '🗺️ Roadmap' },
+    { id: 'Mobile_Strategy', title: '📱 Mobile Strategy' },
+    { id: 'Reputation_System', title: '⭐ Reputation' }
+];
+
 const WikiModal = ({ isOpen, onClose }) => {
-    const [content, setContent] = useState('');
-    const [currentPath, setCurrentPath] = useState('Home.md');
-    const [history, setHistory] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [activePage, setActivePage] = useState('Home');
+    const [content, setContent] = useState('Loading...');
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (isOpen) {
-            fetchPage(currentPath);
+        if (!isOpen) return;
+
+        const fetchDoc = async () => {
+            setError(null);
+            try {
+                // Use BASE_URL to handle deployment subpaths
+                const basePath = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL;
+                // remove trailing slash if present to avoid double slash
+                const cleanBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+
+                const response = await fetch(`${cleanBase}/docs/${activePage}.md`);
+                if (!response.ok) throw new Error(`Failed to load ${activePage}`);
+                const text = await response.text();
+                setContent(text);
+            } catch (err) {
+                console.error("Wiki Fetch Error:", err);
+                setContent("# Error\nCould not load documentation. Please check if `docs/` is in `public/`.");
+                setError(err.message);
+            }
+        };
+
+        fetchDoc();
+    }, [activePage, isOpen]);
+
+    // Handle internal wiki links [Like This](DocName.md)
+    const transformLink = (href) => {
+        // If it's a relative md file, switch page
+        if (href && !href.startsWith('http') && href.endsWith('.md')) {
+            const pageId = href.replace('.md', '').replace('docs/', '');
+            return {
+                onClick: (e) => {
+                    e.preventDefault();
+                    // Find if it's a valid page
+                    const exists = PAGES.find(p => p.id === pageId || p.id === pageId.split('/').pop());
+                    if (exists) setActivePage(exists.id);
+                    else console.warn(`Wiki link to unknown page: ${pageId}`);
+                },
+                href: '#'
+            };
         }
-    }, [isOpen, currentPath]);
-
-    const fetchPage = async (path) => {
-        setLoading(true);
-        try {
-            // Clean up path to ensure we're fetching relative to Wiki root
-            const cleanPath = path.replace(/^\.\//, ''); // Remove leading ./
-            const response = await fetch(`${import.meta.env.BASE_URL}Wiki/${cleanPath}`);
-
-            if (!response.ok) throw new Error('Failed to load page');
-
-            const text = await response.text();
-            setContent(text);
-        } catch (error) {
-            setContent('# Error\nCould not load the requested Wiki page.');
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleLinkClick = (href) => {
-        if (href.endsWith('.md')) {
-            // Internal Wiki Link
-            setHistory([...history, currentPath]);
-
-            // Handle relative paths like ../Design/Doc.md - simplified for now to flat structure or direct mapping
-            // For now, let's assume flat or direct children for the demo, or just handle filename
-            const filename = href.split('/').pop();
-            setCurrentPath(filename);
-
-        } else {
-            // External Link
-            window.open(href, '_blank');
-        }
-    };
-
-    const handleBack = () => {
-        if (history.length > 0) {
-            const previous = history[history.length - 1];
-            setHistory(history.slice(0, -1));
-            setCurrentPath(previous);
-        }
+        return { href, target: '_blank' };
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Project Wiki" className="wiki-modal">
-            <div className="wiki-controls" style={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
-                <button
-                    className="btn nav"
-                    onClick={handleBack}
-                    disabled={history.length === 0}
-                    style={{ opacity: history.length === 0 ? 0.5 : 1 }}
-                >
-                    ⬅ Back
-                </button>
-                <button
-                    className="btn nav"
-                    onClick={() => {
-                        setHistory([]);
-                        setCurrentPath('Home.md');
-                    }}
-                >
-                    🏠 Home
-                </button>
-            </div>
-
-            <div className="wiki-content" style={{ maxHeight: '60vw', overflowY: 'auto', textAlign: 'left', padding: '0 10px' }}>
-                {loading ? (
-                    <p>Loading...</p>
-                ) : (
+        <Modal isOpen={isOpen} onClose={onClose} title="Chillista Wiki" className="wiki-modal">
+            <div className="wiki-layout">
+                <div className="wiki-sidebar">
+                    {PAGES.map(page => (
+                        <button
+                            key={page.id}
+                            className={`wiki-nav-btn ${activePage === page.id ? 'active' : ''}`}
+                            onClick={() => setActivePage(page.id)}
+                        >
+                            {page.title}
+                        </button>
+                    ))}
+                </div>
+                <div className="wiki-content">
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                            a: ({ node, ...props }) => (
-                                <a
-                                    {...props}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handleLinkClick(props.href);
-                                    }}
-                                    style={{ color: 'var(--accent-color)', cursor: 'pointer', textDecoration: 'underline' }}
-                                />
-                            ),
-                            h1: ({ node, ...props }) => <h1 style={{ borderBottom: '2px solid #5d4037', paddingBottom: '0.5rem', marginTop: '0' }} {...props} />,
-                            h2: ({ node, ...props }) => <h2 style={{ color: '#5d4037', marginTop: '1.5rem' }} {...props} />,
-                            ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem' }} {...props} />,
-                            details: ({ node, ...props }) => <details style={{ backgroundColor: '#f0e6d2', padding: '0.5rem', borderRadius: '4px', margin: '0.5rem 0' }} {...props} />,
-                            summary: ({ node, ...props }) => <summary style={{ cursor: 'pointer', fontWeight: 'bold' }} {...props} />,
-                            code: ({ node, inline, className, children, ...props }) => {
-                                return !inline ? (
-                                    <pre style={{ background: '#333', color: '#eee', padding: '1rem', borderRadius: '4px', overflowX: 'auto' }}>
-                                        <code {...props} className={className}>
-                                            {children}
-                                        </code>
-                                    </pre>
-                                ) : (
-                                    <code style={{ background: '#e0e0e0', padding: '0.2rem 0.4rem', borderRadius: '3px', fontFamily: 'monospace' }} {...props}>
-                                        {children}
-                                    </code>
-                                )
+                            a: ({ href, children }) => {
+                                const { onClick, href: newHref, target } = transformLink(href);
+                                return <a href={newHref} onClick={onClick} target={target}>{children}</a>;
                             }
                         }}
                     >
                         {content}
                     </ReactMarkdown>
-                )}
+                </div>
             </div>
         </Modal>
     );

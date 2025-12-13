@@ -50,6 +50,15 @@
     - [ ] **TODO (BLOCKED)**: Regenerate all pixel art assets as transparent PNGs (currently JPEGs with baked-in checkers).
     - [ ] **TODO (BLOCKED)**: Generate missing HUD icons (Rep, Pantry).
 
+## Upcoming Priorities (Phase 2.5)
+- **Mobile**:
+    - [ ] Mobile support (iOS, Android).
+    - [ ] Mobile UI (touch controls, etc).
+    - [ ] Mobile gameplay (touch controls, etc).
+    - [ ] Mobile testing (iOS, Android).
+    - [ ] Mobile UI polish.
+    - [ ] Mobile debugging.
+
 ## Upcoming Priorities (Phase 3)
 - **Convert to React Native**:
     - [ ] Review the entire project and create a plan to convert it to React Native.
@@ -57,7 +66,20 @@
         - [ ] Map out features and dependencies and prepare to put each in its own commit on this branch.
         - [ ] Commit and push each feature to the 'react-native' branch.
         - [ ] Once the branch is ready, create a pull request for me to review.
+- **Reputation System**:
+    - [ ] Reputation system (cash, reputation).
+    - [ ] Reputation requirements (cash, reputation).
+    - [ ] Reputation mileston (cash, reputation).
+        - [ ] Reputation level starts 0-10 every level
+    - [ ] Reputation effects (cash, reputation).
+    - [ ] Reputation purchase confirmation (pop-up).
+
 ## Upcoming Priorities (Phase 4)
+- **Documentation**:
+    - [ ] Expand Wiki to include game design, technical stack, and implementation details.
+        - [ ] Utilize system architecture docs, workflows, and design docs for content.
+
+## Upcoming Priorities (Phase 5)
 - **Game Mechanics & Balance**:
     - **Difficulty Settings**:
         - [ ] Add button in Settings to toggle difficulty (Cozy, Challenging, Extreme!).
@@ -78,6 +100,7 @@
             - [ ] Customers walk out when time expires.
             - [ ] Dialogue option to placate/extend patience (e.g. "Coming right up!").
 
+## Upcoming Priorities (Phase 6)
 - **Main Controls Complexity**:
     - [ ] Introduce a multi-step process for drink preparation, starting with boiling water for Aeropress extraction.
         - [ ] **TODO**: Implement visual and auditory cues for water temperature and boiling.
@@ -102,8 +125,12 @@
         - [ ] Cart Upgrades (Larger capacity, better equipment placement).
 - **Upgrades**:
     - [ ] Upgrade system (cost, effect).
-        - [ ] Upgrades tab in the shop.
+        - [ ] Upgrades tab in the shop unlocked after reputation is high enough.
     - [ ] Upgrade requirements (cash, reputation).
+    - [ ] Upgrade categories (workstation, cart, etc).
+    - [ ] Upgrade effects (workstation: faster brewing, cart: larger capacity, etc).
+    - [ ] Upgrade purchase confirmation (pop-up).
+    
 - **Mode System**:
     - [ ] Hide the mode button and make it an unlockable item. Each mode can be purchased from the shop under the 'upgrades' tab. 
     - [ ] Create three separate mode menus. When pressing the mode button a small header should display what mode you are in: 
@@ -116,7 +143,7 @@
         - [ ] advanced logging
         - [ ] metrics that help me understand the game and the flow of resources through the coffee world.
 
-## Upcoming Priorities (Phase 5)
+## Upcoming Priorities (Phase 7)
 - **Staff Management**:
     - [ ] Hire a barista to automate brewing.
     - [ ] Staff wages and shifts.

@@ -18,9 +18,15 @@ const UPGRADES = [
     { id: 'mode_espresso', name: 'Espresso Machine', icon: '✨', desc: 'Unlock Espresso brewing mode.', cost: 250, rep: 25, type: 'mode' }
 ];
 
+const SKINS = [
+    { key: 'SKIN_WOOD', name: 'Rustic Wood', icon: '🪵', desc: 'A warm, natural look.', cost: 50.00 },
+    { key: 'SKIN_METAL', name: 'Industrial Metal', icon: '⚙️', desc: 'Sleek and modern.', cost: 150.00 },
+    { key: 'SKIN_MARBLE', name: 'Luxury Marble', icon: '🏛️', desc: 'Premium elegance.', cost: 200.00 }
+];
+
 const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
     const [activeTab, setActiveTab] = useState('supplies');
-    const { cash, stats, upgrades } = gameState;
+    const { cash, stats, upgrades, decorations, activeSkin } = gameState;
 
     // Get suggestions from game logic if available, or calculate locally (fallback)
     const suggestions = gameState.getShoppingSuggestions ? gameState.getShoppingSuggestions() : [];
@@ -43,6 +49,12 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                     onClick={() => setActiveTab('upgrades')}
                 >
                     Upgrades
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'decors' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('decors')}
+                >
+                    Decorations
                 </button>
             </div>
 
@@ -71,7 +83,7 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                                 <button
                                     className="btn buy"
                                     onClick={() => handleBuy(item.key, item.amount)}
-                                    disabled={cash < item.cost}
+                                    disabled={false}
                                 >
                                     Buy
                                 </button>
@@ -85,7 +97,7 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                         {UPGRADES.map(upgrade => {
                             const isOwned = upgrades.includes(upgrade.id);
                             const isLocked = stats.reputation < upgrade.rep;
-                            const canAfford = cash >= upgrade.cost;
+                            // const canAfford = cash >= upgrade.cost; // HARD MODE: Allow debt
 
                             return (
                                 <div key={upgrade.id} className={`shop-item ${isOwned ? 'owned' : ''} ${isLocked ? 'locked' : ''}`}>
@@ -100,9 +112,48 @@ const ShopModal = ({ isOpen, onClose, gameState, handleBuy, buyUpgrade }) => {
                                     <button
                                         className="btn buy"
                                         onClick={() => buyUpgrade(upgrade.id)}
-                                        disabled={isOwned || isLocked || !canAfford}
+                                        disabled={isOwned || isLocked}
                                     >
                                         {isOwned ? 'Owned' : (isLocked ? 'Locked' : 'Buy')}
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {activeTab === 'decors' && (
+                    <div className="shop-items">
+                        <div style={{ padding: '0.5rem', fontStyle: 'italic', textAlign: 'center', opacity: 0.8 }}>
+                            Customize your cart! Skins apply immediately.
+                        </div>
+                        {SKINS.map(skin => {
+                            // Map the SHOP key to the internal skin-key for checking ownership
+                            // BEANS_STD -> beans_standard mapping logic is inside handleBuy
+                            // But here we need to know the mapping to check 'decorations'.
+                            // Hardcoded mapping based on useInventory:
+                            // SKIN_WOOD -> skin-wood
+                            const skinId = skin.key.toLowerCase().replace('_', '-');
+
+                            const isEquipped = activeSkin === skinId;
+                            const isOwned = decorations.includes(skinId);
+                            // const canAfford = cash >= skin.cost; // HARD MODE
+
+                            return (
+                                <div key={skin.key} className={`shop-item ${isEquipped ? 'equipped' : ''} ${isOwned ? 'owned' : ''}`}>
+                                    <div className="icon">{skin.icon}</div>
+                                    <div className="details">
+                                        <h3>{skin.name}</h3>
+                                        <p>{skin.desc}</p>
+                                        {isOwned ? null : <p className="cost">${skin.cost.toFixed(2)}</p>}
+                                    </div>
+                                    <button
+                                        className="btn buy"
+                                        onClick={() => handleBuy(skin.key, 1)}
+                                        disabled={isEquipped || (isOwned ? false : false)} // Always enabled if not equipped (logic handles equip vs buy)
+                                        style={isEquipped ? { background: '#8d6e63', borderColor: '#5d4037' } : {}}
+                                    >
+                                        {isEquipped ? 'Equipped' : (isOwned ? 'Equip' : 'Buy')}
                                     </button>
                                 </div>
                             );

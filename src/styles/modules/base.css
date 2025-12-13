@@ -16,6 +16,11 @@ body {
     /* Increased base font size for bigger UI */
 }
 
+#root {
+    width: 100%;
+    height: 100%;
+}
+
 /* Screens */
 .screen {
     width: 100%;

@@ -1,5 +1,10 @@
+import Tooltip from './Tooltip';
+
 export const BrewingVisuals = ({ gameState }) => {
+    // ... (unchanged)
     const { mode, step, isBoiling } = gameState.brewingState;
+    // Extract activeSkin from inventoryState (flat in gameState)
+    const activeSkin = gameState.activeSkin || 'skin-default';
 
     // Helper for coffee state class specifically
     const getCoffeeStateClass = () => {
@@ -11,7 +16,7 @@ export const BrewingVisuals = ({ gameState }) => {
     };
 
     return (
-        <div className="brewing-station">
+        <div className={`brewing-station ${activeSkin}`}>
             {/* Station Visuals */}
             <div className="station-area">
                 {mode === 'coffee' && (
@@ -76,68 +81,102 @@ export const BrewingControls = ({ gameState, handleBrewAction, performServe, tog
         <div id="controls-area" className="controls-area">
             {mode === 'coffee' && (
                 <div id="coffee-controls" className="control-group">
-                    <button className="btn" onClick={() => handleBrewAction('BOIL')} disabled={step > 0 || isBoiling}>
-                        {isBoiling ? 'Boiling...' : 'Boil Water'}
-                    </button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('GRIND')} disabled={step !== 1}>Grind Beans</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('ADD_WATER')} disabled={step !== 2}>Add Water</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('STIR')} disabled={step > 3}>Stir</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('PLUNGE')} disabled={step !== 4}>Plunge</button>
-                    <div className="arrow">→</div>
-                    <button
-                        id="btn-serve-coffee"
-                        className={`btn ${step === 5 ? '' : 'disabled'}`}
-                        onClick={performServe}
-                    >
-                        Serve Coffee
-                    </button>
-                    <button className="btn nav" onClick={() => dialogue.triggerGreeting(gameState.currentCustomer, gameState.weather)} disabled={!gameState.currentCustomer}>Talk</button>
+                    <Tooltip text="Heat water to 200°F">
+                        <button className="btn" onClick={() => handleBrewAction('BOIL')}>
+                            {isBoiling ? 'Boiling...' : 'Boil Water'}
+                        </button>
+                    </Tooltip>
+                    <Tooltip text="Coarsely grind fresh beans">
+                        <button className="btn" onClick={() => handleBrewAction('GRIND')}>Grind Beans</button>
+                    </Tooltip>
+                    <Tooltip text="Pour hot water">
+                        <button className="btn" onClick={() => handleBrewAction('ADD_WATER')}>Add Water</button>
+                    </Tooltip>
+                    <Tooltip text="Agitate grounds">
+                        <button className="btn" onClick={() => handleBrewAction('STIR')}>Stir</button>
+                    </Tooltip>
+                    <Tooltip text="Press coffee">
+                        <button className="btn" onClick={() => handleBrewAction('PLUNGE')}>Plunge</button>
+                    </Tooltip>
+                    <Tooltip text="Serve to customer">
+                        <button
+                            id="btn-serve-coffee"
+                            className="btn action"
+                            onClick={performServe}
+                        >
+                            Serve Coffee
+                        </button>
+                    </Tooltip>
+                    <Tooltip text="Chat with customer">
+                        <button className="btn nav" onClick={() => dialogue.triggerGreeting(gameState.currentCustomer, gameState.weather)} disabled={!gameState.currentCustomer}>Talk</button>
+                    </Tooltip>
                 </div>
             )}
 
             {mode === 'matcha' && (
                 <div id="matcha-controls" className="control-group">
-                    <button className="btn" onClick={() => handleBrewAction('SIFT')} disabled={step > 0}>Sift Powder</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('ADD_WATER')} disabled={step !== 1}>Add Water</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('WHISK')} disabled={step !== 2}>Whisk</button>
-                    <div className="arrow">→</div>
-                    <button
-                        id="btn-serve-matcha"
-                        className={`btn ${step === 3 ? '' : 'disabled'}`}
-                        onClick={performServe}
-                    >
-                        Serve Matcha
-                    </button>
-                    <button className="btn nav" onClick={() => dialogue.triggerGreeting(gameState.currentCustomer, gameState.weather)} disabled={!gameState.currentCustomer}>Talk</button>
+                    <Tooltip text="Prepare matcha powder">
+                        <button className="btn" onClick={() => handleBrewAction('SIFT')}>Sift Powder</button>
+                    </Tooltip>
+                    <Tooltip text="Add hot water">
+                        <button className="btn" onClick={() => handleBrewAction('ADD_WATER')}>Add Water</button>
+                    </Tooltip>
+                    <Tooltip text="Froth the matcha">
+                        <button className="btn" onClick={() => handleBrewAction('WHISK')}>Whisk</button>
+                    </Tooltip>
+                    <Tooltip text="Serve to customer">
+                        <button
+                            id="btn-serve-matcha"
+                            className="btn action"
+                            onClick={performServe}
+                        >
+                            Serve Matcha
+                        </button>
+                    </Tooltip>
+                    <Tooltip text="Chat with customer">
+                        <button className="btn nav" onClick={() => dialogue.triggerGreeting(gameState.currentCustomer, gameState.weather)} disabled={!gameState.currentCustomer}>Talk</button>
+                    </Tooltip>
                 </div>
             )}
 
             {mode === 'espresso' && (
                 <div id="espresso-controls" className="control-group">
-                    <button className="btn" onClick={() => handleBrewAction('GRIND')} disabled={step > 0}>Grind</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('TAMP')} disabled={step !== 1}>Tamp</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('PULL_SHOT')} disabled={step !== 2}>Pull Shot</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('STEAM_MILK')} disabled={step !== 3}>Steam Milk</button>
-                    <div className="arrow">→</div>
-                    <button className="btn" onClick={() => handleBrewAction('POUR')} disabled={step !== 4}>Pour Art</button>
-                    <div className="arrow">→</div>
-                    <button
-                        id="btn-serve-espresso"
-                        className={`btn ${step === 5 ? '' : 'disabled'}`}
-                        onClick={performServe}
-                    >
-                        Serve Espresso
-                    </button>
-                    <button className="btn nav" onClick={() => dialogue.triggerGreeting(gameState.currentCustomer, gameState.weather)} disabled={!gameState.currentCustomer}>Talk</button>
+                    <Tooltip text="Grind coffee beans">
+                        <button className="btn" onClick={() => handleBrewAction('GRIND')}>Grind</button>
+                    </Tooltip>
+                    <Tooltip text="Compress coffee bed">
+                        <button className="btn" onClick={() => handleBrewAction('TAMP')}>Tamp</button>
+                    </Tooltip>
+                    <Tooltip text="Extract espresso shot">
+                        <button className="btn" onClick={() => handleBrewAction('PULL_SHOT')}>Pull Shot</button>
+                    </Tooltip>
+                    <Tooltip text="Texture the milk">
+                        <button className="btn" onClick={() => handleBrewAction('STEAM_MILK')}>Steam Milk</button>
+                    </Tooltip>
+                    <Tooltip text="Create latte art">
+                        <button className="btn" onClick={() => handleBrewAction('POUR')}>Pour Art</button>
+                    </Tooltip>
+                    <Tooltip text="Serve to customer">
+                        <button
+                            id="btn-serve-espresso"
+                            className="btn action"
+                            onClick={performServe}
+                        >
+                            Serve Espresso
+                        </button>
+                    </Tooltip>
+                    <Tooltip text="Chat with customer">
+                        <button className="btn nav" onClick={() => dialogue.triggerGreeting(gameState.currentCustomer, gameState.weather)} disabled={!gameState.currentCustomer}>Talk</button>
+                    </Tooltip>
+                </div>
+            )}
+
+            {/* Mode Switcher - Only if upgrades are unlocked */}
+            {gameState.upgrades && gameState.upgrades.some(u => u.startsWith('mode_')) && (
+                <div style={{ marginTop: '10px', width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <Tooltip text="Change station">
+                        <button className="btn nav" onClick={() => toggleModal('mode')}>Switch Mode</button>
+                    </Tooltip>
                 </div>
             )}
         </div>

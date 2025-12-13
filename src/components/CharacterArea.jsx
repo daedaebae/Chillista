@@ -33,7 +33,8 @@ export default function CharacterArea({ currentCustomer, minutesElapsed }) {
                         fontSize: '0.8rem',
                         fontWeight: 'bold',
                         color: currentCustomer.patience < 5 ? '#d32f2f' : (currentCustomer.patience < 10 ? '#f57f17' : '#3e2723'),
-                        zIndex: 20,
+                        color: currentCustomer.patience < 5 ? '#d32f2f' : (currentCustomer.patience < 10 ? '#f57f17' : '#3e2723'),
+                        zIndex: 100, /* Ensure it is above Brewing Station (22) and Avatars (30) */
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',

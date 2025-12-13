@@ -1,16 +1,32 @@
-# React + Vite
+# ☕ Chillista
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> *The Cozy Coffee Cart Simulator*
 
-Currently, two official plugins are available:
+Chillista is a relaxing, low-stakes simulation game where you run a coffee cart. Brew pour-overs, craft lattés, and serve a cast of quirky customers—all while managing your supplies and reputation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Chillista Banner](public/logo.png)
 
-## React Compiler
+## 🎮 Play Now
+Run the game locally:
+```bash
+npm install
+npm run dev
+```
+Open `http://localhost:5173/` in your browser.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📚 Documentation
+The full Wiki is available in the [`docs/`](docs/) directory.
 
-## Expanding the ESLint configuration
+-   **[Home](docs/Home.md)**: Wiki Landing Page.
+-   **[Game Mechanics](docs/Game_Mechanics.md)**: How to play, brewing guides, and customers.
+-   **[Development Guide](docs/Development.md)**: Architecture and contribution.
+-   **[Roadmap](docs/Roadmap.md)**: Future plans.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠 Features
+-   **Manual Brewing**: Grind beans, boil water, plunge the press.
+-   **Upgrades**: Unlock Espresso machines, Matcha kits, and faster grinders.
+-   **Customization**: Decorate your cart with unlockable skins.
+-   **Dynamic Systems**: Weather affects customer patience; Reputation unlocks perks.
+
+## 📄 License
+MIT License.

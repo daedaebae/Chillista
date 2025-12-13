@@ -1,16 +1,6 @@
 # User requested fixes, in order.
 
-1.  [x] Disable debug mode check box and requirement to have it on to use the debug menu.
-2.  [x] Change the rainy overlay to be more rain-like and include dark clouds overlaying the background.
-3.  [x] Add time/rep requirements for upgrades.
-4.  [x] Remove the blink and beep at the Day Complete menu.
-5.  [x] Generate images to replace the HUD icons.
-6.  [x] Make the HUD icons larger.
-7.  [x] Change the requirements from playtime to money made
-8.  [x] Improve the gifs to be more dynamic.
-9.  [x] Remove the grey checker from behind the barista avatar picture.
-10. [x] Add customer avatar for each customer and show it when they place their order.  
-11. [ ] remove the save game button and just auto save every 30 seconds.
-12. [ ] make a hover tooltip for all hud buttons to show the name of the button and a description of what it does.
-13. [ ] bring back the coffee-menu popover intro andsettings menu.
-14. [ ] 
+1.  [x] Widen the game container as its currently obscuring player and customer avatars.
+2.  [x] Fix the floating controls and buttons. Rename elements to be more intuitive.
+3.  [ ] Update the wiki with the new features and changes.
+4.  [ ] when you choose "on the house" make the drink free for that customer and if they like that make give a small reputation boost.

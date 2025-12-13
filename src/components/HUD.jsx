@@ -17,7 +17,7 @@ const HUD = ({ gameState, toggleModal }) => {
     };
 
     return (
-        <div id="hud" className="hud-horizontal" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div id="hud" className="hud-horizontal">
             <Tooltip text="Pantry: View your ingredients and inventory" placement="bottom">
                 <div className="hud-item" onClick={() => toggleModal('inventory')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                     <span className="hud-icon" style={{ fontSize: '24px', marginRight: '5px' }}>🎒</span>

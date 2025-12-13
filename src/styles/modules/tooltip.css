@@ -55,8 +55,46 @@
     border-color: transparent transparent var(--text-color, #3e2723) transparent;
 }
 
+.tooltip-bubble.left {
+    top: 50%;
+    right: 100%;
+    transform: translateY(-50%);
+    margin-right: 12px;
+}
+
+.tooltip-bubble.left::after {
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-color: transparent transparent transparent var(--text-color, #3e2723);
+}
+
+.tooltip-bubble.right {
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    margin-left: 12px;
+}
+
+.tooltip-bubble.right::after {
+    top: 50%;
+    right: 100%;
+    margin-top: -5px;
+    margin-left: 0;
+    /* Override default */
+    border-color: transparent var(--text-color, #3e2723) transparent transparent;
+    left: auto;
+    /* Override default */
+}
+
 @keyframes fadeIn {
     to {
         opacity: 1;
+    }
+}
+
+@media (hover: none) {
+    .tooltip-bubble {
+        display: none !important;
     }
 }

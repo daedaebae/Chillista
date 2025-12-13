@@ -230,3 +230,12 @@ body.dark-mode .coffee-menu h2 {
     border: 2px solid #fffaf0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
+
+@media (max-width: 768px) {
+    .coffee-menu {
+        padding: 1rem;
+        /* Reduce padding to save space on mobile */
+        width: 95%;
+        /* Ensure it fits but leaves a margin */
+    }
+}

@@ -129,14 +129,25 @@
     transition: transform 0.3s ease;
 }
 
-.music-toggle,
-.skip-toggle,
-.settings-toggle {
+/* Floating Controls Container */
+.floating-controls {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 40px;
-    height: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 2000;
+    align-items: center;
+}
+
+.music-toggle,
+.skip-toggle,
+.settings-toggle,
+.wiki-toggle {
+    width: 44px;
+    height: 44px;
+    /* Touch target ready */
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid var(--border-color);
@@ -146,24 +157,34 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    z-index: 2000;
     transition: all 0.2s ease;
+    /* Removed individual positioning */
 }
 
 .music-toggle:hover,
 .skip-toggle:hover,
-.settings-toggle:hover {
+.settings-toggle:hover,
+.wiki-toggle:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.25);
     background: #fff;
 }
 
-.skip-toggle {
-    right: 70px;
-}
-
-.settings-toggle {
-    right: 120px;
+/* Mobile Bottom Nav */
+@media (max-width: 768px) {
+    .floating-controls {
+        bottom: 10px;
+        right: 0;
+        left: 0;
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        /* Subtle backing */
+        padding: 5px 0;
+        backdrop-filter: blur(2px);
+        gap: 20px;
+    }
 }
 
 /* Mobile Responsive HUD */
@@ -183,10 +204,12 @@
     }
 
     .hud-item {
-        padding: 0.2rem 0.4rem;
+        padding: 0.5rem 0.8rem;
+        /* Increased for touch target */
         font-size: 0.9rem;
         flex-shrink: 0;
         min-width: max-content;
-        /* Ensure items don't squish */
+        min-height: 44px;
+        /* Apple Human Interface Guidelines */
     }
 }

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import Tooltip from './components/Tooltip';
 import { useGame } from './hooks/useGame';
 import DebugModal from './components/DebugModal';
 import HUD from './components/HUD';
@@ -36,10 +37,23 @@ function App() {
     }
   }, [game.gameState.darkModeEnabled]);
 
+  // Handle Debug Toggle
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '`' || e.key === '~') {
+        game.toggleDebugMenu();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [game]);
+
   return (
     <div className="game-container">
       <img src={pixelCafeBg} className="bg-image" alt="Coffee Shop Background" />
       <HUD {...game} />
+
+
       <div className="work-space">
         <CharacterArea
           currentCustomer={game.gameState.currentCustomer}
@@ -90,20 +104,43 @@ function App() {
 
       <DebugModal
         isOpen={uiState.showDebug}
-        onClose={() => toggleModal('debug')} // Assuming toggleModal can handle 'debug' or toggleDebugMenu is used
+        onClose={game.toggleDebugMenu}
         {...game}
       />
 
-      {/* Music Controls */}
-      <button className="music-toggle" onClick={() => game.toggleMusic(!game.gameState.settings.musicEnabled)} title="Toggle Music">
-        {game.gameState.settings.musicEnabled ? '🔊' : '🔇'}
-      </button>
-      <button className="skip-toggle" onClick={game.skipTrack} title="Skip Track">
-        ⏭️
-      </button>
-      <button className="settings-toggle" onClick={() => toggleModal('settings')} title="Settings">
-        ⚙️
-      </button>
+      <ModeSelectionModal
+        isOpen={uiState.activeModal === 'mode'}
+        onClose={() => toggleModal('mode')}
+        onSelectMode={game.selectMode}
+        unlockedModes={game.gameState.upgrades}
+      />
+
+      {/* Floating Controls */}
+      <div className="floating-controls">
+        <Tooltip text={game.gameState.settings.musicEnabled ? "Mute Music" : "Play Music"} placement="left">
+          <button className="music-toggle" onClick={() => game.toggleMusic(!game.gameState.settings.musicEnabled)}>
+            {game.gameState.settings.musicEnabled ? '🔊' : '🔇'}
+          </button>
+        </Tooltip>
+
+        <Tooltip text="Skip Song" placement="left">
+          <button className="skip-toggle" onClick={game.skipTrack}>
+            ⏭️
+          </button>
+        </Tooltip>
+
+        <Tooltip text="Game Options" placement="left">
+          <button className="settings-toggle" onClick={() => toggleModal('settings')}>
+            ⚙️
+          </button>
+        </Tooltip>
+
+        <Tooltip text="Barista Guide" placement="left">
+          <button className="wiki-toggle" onClick={() => toggleModal('wiki')}>
+            📚
+          </button>
+        </Tooltip>
+      </div>
     </div>
   );
 }

@@ -90,8 +90,11 @@
     display: flex;
     align-items: flex-end;
     /* Aligns character elements to the bottom */
-    justify-content: center;
-    /* Centers character elements horizontally */
+    justify-content: space-between;
+    /* Pushes avatars to the edges to avoid the brewing station */
+    padding: 0 10%;
+    /* Add padding to bring them in slightly from the very edge */
+    box-sizing: border-box;
     z-index: 12;
     /* High z-index to ensure characters are on top of most other elements */
     width: 100%;

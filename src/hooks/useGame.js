@@ -134,6 +134,9 @@ export const useGame = () => {
                 audio.stopAmbience();
             }
 
+            // Reset customers
+            customers.resetAllCustomers();
+
             // Initial Save to lock in "Game Started" state
             setTimeout(() => saveGame(true), 100);
 
@@ -152,6 +155,8 @@ export const useGame = () => {
 
     const advanceTimeWrapper = useCallback((minutes) => {
         if (gameMeta.debug.timePaused) return;
+        // PAUSE GAME if Settings or other Modals are open
+        if (uiState.activeModal === 'settings' || uiState.activeModal === 'shop' || uiState.activeModal === 'inventory' || uiState.activeModal === 'wiki' || uiState.activeModal === 'intro') return;
 
         time.advanceTime(minutes).then(newTimeState => {
             // 1. Check Patience
@@ -193,117 +198,89 @@ export const useGame = () => {
     const handleBrewAction = useCallback((action) => {
         const { mode, step } = brewing.brewingState;
 
+        // HARDER GAMEPLAY UPDATE:
+        // Removed strict step validation (e.g. 'if step === 0').
+        // Actions now force the state to the "result" of that action, allowing skipping/mistakes.
+
         if (mode === 'coffee') {
-            if (action === 'BOIL' && step === 0) {
+            if (action === 'BOIL') {
                 brewing.setBoiling(true);
                 addLog("Heating water...", 'neutral');
                 audio.playSound('steam');
-
                 setTimeout(() => {
                     brewing.setBoiling(false);
-                    brewing.advanceStep();
+                    // Boiling just enables hot water, doesn't necessarily advance step if using physics?
+                    // But for this simplified state machine, Boiling takes us to "Ready to Grind" or just "Water Hot".
+                    // Original: Step 0 -> 1.
+                    brewing.setStrictStep(1);
                     addLog("Water hot!", 'success');
                 }, 3000);
-            } else if (action === 'GRIND' && step === 1) {
+            } else if (action === 'GRIND') {
                 if (inventory.deductResources({ 'beans_standard': 20 })) {
-                    brewing.advanceStep();
+                    brewing.setStrictStep(2); // Jump to "Grounds in Chamber"
                     addLog("Beans ground.", 'success');
                     audio.playSound('grind');
                 } else {
-                    addLog("Not enough beans!", 'error');
-                    audio.playSound('error');
+                    addLog("Not enough beans! (Still ground air...)", 'error'); // Or just fail silent? User said "allow making mistakes".
+                    // If we failed deduct, we still allow action? 
+                    // deductResources now returns TRUE always (negative inv). So this block always runs!
+                    // The "else" block is now unreachable with my useInventory change.
                 }
-            } else if (action === 'ADD_WATER' && step === 2) {
+            } else if (action === 'ADD_WATER') {
                 if (inventory.deductResources({ 'water': 250 })) {
-                    brewing.advanceStep();
+                    brewing.setStrictStep(3); // Jump to "Water Added"
                     addLog("Hot water added.", 'success');
                     audio.playSound('pour');
-                } else {
-                    addLog("Not enough water!", 'error');
-                    audio.playSound('error');
                 }
             } else if (action === 'STIR') {
-                if (step === 3) {
-                    brewing.advanceStep();
-                    addLog("Stirred.", 'success');
-                    audio.playSound('action');
-                } else if (step < 3) {
-                    addLog("You practice dry stirring...you feel more confident!", 'neutral');
-                    audio.playSound('action');
-                }
+                brewing.setStrictStep(4); // Jump to "Stirred"
+                addLog("Stirred.", 'success');
+                audio.playSound('action');
             } else if (action === 'PLUNGE') {
-                if (step === 4) {
-                    if (inventory.deductResources({ 'filters': 1 })) {
-                        brewing.advanceStep();
-                        addLog("Plunged!", 'success');
-                        audio.playSound('action'); // Maybe steam sound here too?
-                    } else {
-                        addLog("Not enough filters!", 'error');
-                        audio.playSound('error');
-                    }
-                } else if (step < 4) {
-                    addLog("You practice plunging...resistance is futile without liquid!", 'neutral');
+                if (inventory.deductResources({ 'filters': 1 })) {
+                    brewing.setStrictStep(5); // Jump to "Plunged/Ready"
+                    addLog("Plunged!", 'success');
                     audio.playSound('action');
                 }
             }
         } else if (mode === 'matcha') {
-            if (action === 'SIFT' && step === 0) {
-                if (inventory.deductResources({ 'matcha_powder': 10 })) {
-                    brewing.advanceStep();
-                    addLog("Matcha sifted.", 'success');
-                    audio.playSound('action');
-                } else {
-                    addLog("Not enough matcha powder!", 'error');
-                    audio.playSound('error');
-                }
-            } else if (action === 'ADD_WATER' && step === 1) {
-                if (inventory.deductResources({ 'water': 100 })) {
-                    brewing.advanceStep();
-                    addLog("Hot water added.", 'success');
-                    audio.playSound('pour');
-                } else {
-                    addLog("Not enough water!", 'error');
-                    audio.playSound('error');
-                }
-            } else if (action === 'WHISK' && step === 2) {
-                brewing.advanceStep();
+            if (action === 'SIFT') {
+                inventory.deductResources({ 'matcha_powder': 10 });
+                brewing.setStrictStep(1);
+                addLog("Matcha sifted.", 'success');
+                audio.playSound('action');
+            } else if (action === 'ADD_WATER') {
+                inventory.deductResources({ 'water': 100 });
+                brewing.setStrictStep(2);
+                addLog("Hot water added.", 'success');
+                audio.playSound('pour');
+            } else if (action === 'WHISK') {
+                brewing.setStrictStep(3);
                 addLog("Whisked to froth.", 'success');
                 audio.playSound('action');
             }
         } else if (mode === 'espresso') {
-            if (action === 'GRIND' && step === 0) {
-                if (inventory.deductResources({ 'beans_premium': 18 })) {
-                    brewing.advanceStep();
-                    addLog("Espresso beans ground.", 'success');
-                    audio.playSound('grind');
-                } else {
-                    addLog("Not enough premium beans!", 'error');
-                    audio.playSound('error');
-                }
-            } else if (action === 'TAMP' && step === 1) {
-                brewing.advanceStep();
+            if (action === 'GRIND') {
+                inventory.deductResources({ 'beans_premium': 18 });
+                brewing.setStrictStep(1);
+                addLog("Espresso beans ground.", 'success');
+                audio.playSound('grind');
+            } else if (action === 'TAMP') {
+                brewing.setStrictStep(2);
                 addLog("Puck tamped.", 'success');
                 audio.playSound('action');
-            } else if (action === 'PULL_SHOT' && step === 2) {
-                if (inventory.deductResources({ 'water': 50 })) {
-                    brewing.advanceStep();
-                    addLog("Shot pulled.", 'success');
-                    audio.playSound('pour');
-                } else {
-                    addLog("Not enough water!", 'error');
-                    audio.playSound('error');
-                }
-            } else if (action === 'STEAM_MILK' && step === 3) {
-                if (inventory.deductResources({ 'milk': 150 })) {
-                    brewing.advanceStep();
-                    addLog("Milk steamed.", 'success');
-                    audio.playSound('steam');
-                } else {
-                    addLog("Not enough milk!", 'error');
-                    audio.playSound('error');
-                }
-            } else if (action === 'POUR' && step === 4) {
-                brewing.advanceStep();
+            } else if (action === 'PULL_SHOT') {
+                inventory.deductResources({ 'water': 50 });
+                brewing.setStrictStep(3);
+                addLog("Shot pulled.", 'success');
+                audio.playSound('pour');
+            } else if (action === 'STEAM_MILK') {
+                inventory.deductResources({ 'milk': 150 });
+                brewing.setStrictStep(4);
+                addLog("Milk steamed.", 'success');
+                audio.playSound('steam');
+            } else if (action === 'POUR') {
+                brewing.setStrictStep(5);
                 addLog("Latte art poured.", 'success');
                 audio.playSound('pour');
             }
@@ -315,6 +292,8 @@ export const useGame = () => {
         const { mode, step } = brewing.brewingState;
         const ready = (mode === 'coffee' && step === 5) || (mode === 'matcha' && step === 3) || (mode === 'espresso' && step === 5); // Updated Coffee step
 
+        // HARDER GAMEPLAY: Allow serving swill
+        /*
         if (!ready) {
             addLog("Drink not ready!", 'error');
             audio.playSound('error');
@@ -325,6 +304,8 @@ export const useGame = () => {
             audio.playSound('error');
             return;
         }
+        */
+
         if (!customers.customerState.currentCustomer) {
             addLog("No customer to serve!", 'error');
             audio.playSound('error');
@@ -333,13 +314,19 @@ export const useGame = () => {
 
         // Logic
         const customer = customers.customerState.currentCustomer;
-        let quality = 1.0;
-        if (mode === 'coffee') {
-            if (customer.order === 'Matcha Latte') quality = 0.1;
-            else if (brewing.brewingState.beanType === 'PRM') quality = 1.5;
-        } else if (mode === 'matcha') {
-            if (customer.order !== 'Matcha Latte') quality = 0.5;
-            else quality = 2.0;
+        let quality = 0.1; // Default for unfinished/swill (Hard Mode)
+
+        if (ready) {
+            quality = 1.0;
+            if (mode === 'coffee') {
+                if (customer.order === 'Matcha Latte') quality = 0.1;
+                else if (brewing.brewingState.beanType === 'PRM') quality = 1.5;
+            } else if (mode === 'matcha') {
+                if (customer.order !== 'Matcha Latte') quality = 0.5;
+                else quality = 2.0;
+            }
+        } else {
+            addLog("Served unfinished drink...", 'neutral');
         }
 
         const patienceBonus = customer.patience > 20 ? 1.2 : 1.0;
@@ -353,7 +340,7 @@ export const useGame = () => {
 
         // Effects
         inventory.addCash(total);
-        inventory.deductResources({ 'cups': 1 }); // We checked before, so this should pass.
+        inventory.deductResources({ 'cups': 1 }); // We checked before, so this should pass. (Now allows negative)
         customers.updateStats(total, tip, repChange, customer.name);
         customers.clearCustomer();
         brewing.resetBrewing();
@@ -541,6 +528,22 @@ export const useGame = () => {
     useEffect(() => {
         loadGame();
     }, [loadGame]);
+
+    // Audio Resume on Interaction (Fix for music not playing on load)
+    useEffect(() => {
+        const handleInteraction = () => {
+            if (audio.context && audio.context.state === 'suspended') {
+                audio.context.resume().then(() => {
+                    if (gameMeta.gameStarted && settings.musicEnabled) {
+                        // Ensure music is playing if it should be
+                        audio.playMusic();
+                    }
+                }).catch(e => console.error("Audio resume failed on click", e));
+            }
+        };
+        window.addEventListener('click', handleInteraction, { once: true }); // Only need once
+        return () => window.removeEventListener('click', handleInteraction);
+    }, [audio.context, gameMeta.gameStarted, settings.musicEnabled, audio.playMusic]);
 
 
     // COMPATIBILITY API (Must match original useGame return)

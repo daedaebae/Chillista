@@ -22,6 +22,7 @@ export const useInventory = (initialState) => {
             matcha_powder: { used: 0, lastRestock: 1 }
         },
         decorations: [],
+        activeSkin: 'skin-default',
         upgrades: [],
         purchaseHistory: []
     });
@@ -68,7 +69,13 @@ export const useInventory = (initialState) => {
             'PLANT': { key: 'plant', cost: 20.00, name: 'Potted Plant', type: 'decoration' },
             'MATCHA': { key: 'matcha_powder', cost: 10.00, name: 'Matcha Powder' },
             'CUPS': { key: 'cups', cost: 5.00, name: 'Paper Cups' },
-            'FILTERS': { key: 'filters', cost: 2.50, name: 'Filters' }
+            'FILTERS': { key: 'filters', cost: 2.50, name: 'Filters' },
+
+            // SKINS
+            'SKIN_WOOD': { key: 'skin-wood', cost: 50.00, name: 'Rustic Wood Skin', type: 'skin' },
+            'SKIN_MARBLE': { key: 'skin-marble', cost: 200.00, name: 'Marble Skin', type: 'skin' },
+            'SKIN_METAL': { key: 'skin-metal', cost: 150.00, name: 'Metal Skin', type: 'skin' },
+            'SKIN_DEFAULT': { key: 'skin-default', cost: 0, name: 'Default Skin', type: 'skin' } // For resetting
         };
 
         const item = itemMap[itemKey];
@@ -79,37 +86,45 @@ export const useInventory = (initialState) => {
         let result = { success: false, item };
 
         setInventoryState(prev => {
-            if (prev.cash >= item.cost) {
-                if (item.type === 'decoration' && prev.decorations.includes(item.key)) {
-                    result = { success: false, reason: 'already_owned', item };
-                    return prev;
-                }
+            // Check if already equipped/owned logic for skins
+            if (item.type === 'skin' && prev.decorations.includes(item.key)) {
+                // If owned, just equip
+                return { ...prev, activeSkin: item.key };
+            }
 
-                const newInventory = { ...prev.inventory };
-                const newDecorations = [...prev.decorations];
-
-                if (item.type === 'decoration') {
-                    newDecorations.push(item.key);
-                } else {
-                    newInventory[item.key] += amount;
-                }
-
-                result = { success: true, item };
-
-                return {
-                    ...prev,
-                    cash: prev.cash - item.cost,
-                    inventory: newInventory,
-                    decorations: newDecorations,
-                    purchaseHistory: [
-                        ...prev.purchaseHistory,
-                        { item: item.name, quantity: amount || 1, cost: item.cost, timestamp: Date.now() } // day is missing here, add later
-                    ]
-                };
-            } else {
-                result = { success: false, reason: 'insufficient_funds', item };
+            // Removed strict checks for Harder Gameplay
+            // Allow negative cash (Bankruptcy)
+            if (item.type === 'decoration' && prev.decorations.includes(item.key)) {
+                result = { success: false, reason: 'already_owned', item };
                 return prev;
             }
+
+            const newInventory = { ...prev.inventory };
+            const newDecorations = [...prev.decorations];
+            let newActiveSkin = prev.activeSkin;
+
+            if (item.type === 'decoration') {
+                newDecorations.push(item.key);
+            } else if (item.type === 'skin') {
+                newDecorations.push(item.key);
+                newActiveSkin = item.key; // Auto-equip on buy
+            } else {
+                newInventory[item.key] += amount;
+            }
+
+            result = { success: true, item };
+
+            return {
+                ...prev,
+                cash: prev.cash - item.cost,
+                inventory: newInventory,
+                decorations: newDecorations,
+                activeSkin: newActiveSkin,
+                purchaseHistory: [
+                    ...prev.purchaseHistory,
+                    { item: item.name, quantity: amount || 1, cost: item.cost, timestamp: Date.now() }
+                ]
+            };
         });
         return result;
     }, []);
@@ -124,7 +139,10 @@ export const useInventory = (initialState) => {
         let result = { success: false };
 
         setInventoryState(prev => {
-            if (prev.cash >= upgrade.cost && reputation >= upgrade.rep) {
+            // Allow upgrade debt too? Sure, user said "bankrupting themselves".
+            // But reputation check should arguably stay? "not having enough money" was the specific allowance.
+            // I'll keep rep check as it's an "unlock", not a resource.
+            if (reputation >= upgrade.rep) {
                 result = { success: true, upgrade };
                 return {
                     ...prev,
@@ -147,13 +165,8 @@ export const useInventory = (initialState) => {
         // deductions = { beans_standard: 20, water: 250 }
         let success = true;
         setInventoryState(prev => {
-            // Verify first (optional, or assume caller checked)
-            // We'll assume strict check
-            for (const [key, val] of Object.entries(deductions)) {
-                if ((prev.inventory[key] || 0) < val) success = false;
-            }
-
-            if (!success) return prev;
+            // Removed strict check for Harder Gameplay
+            // Allow negative inventory
 
             const newInv = { ...prev.inventory };
             const newUsage = { ...prev.resourceUsage };
@@ -174,7 +187,7 @@ export const useInventory = (initialState) => {
                 resourceUsage: newUsage
             };
         });
-        return true;
+        return true; // Always return success
     }, []);
 
     const syncInventoryState = useCallback((saved) => {
@@ -183,6 +196,7 @@ export const useInventory = (initialState) => {
             cash: saved.cash,
             inventory: saved.inventory,
             decorations: saved.decorations,
+            activeSkin: saved.activeSkin || 'skin-default',
             upgrades: saved.upgrades,
             purchaseHistory: saved.purchaseHistory
         }));

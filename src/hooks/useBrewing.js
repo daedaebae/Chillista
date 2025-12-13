@@ -24,6 +24,10 @@ export const useBrewing = () => {
         setBrewingState(prev => ({ ...prev, isBoiling }));
     }, []);
 
+    const setStrictStep = useCallback((step) => {
+        setBrewingState(prev => ({ ...prev, step }));
+    }, []);
+
     const resetBrewing = useCallback(() => {
         setBrewingState(prev => ({ ...prev, step: 0, beanType: null, isBoiling: false }));
     }, []);
@@ -38,6 +42,7 @@ export const useBrewing = () => {
         advanceStep,
         setBoiling, // Export
         resetBrewing,
-        syncBrewingState
-    }), [brewingState, setMode, advanceStep, setBoiling, resetBrewing, syncBrewingState]);
+        syncBrewingState,
+        setStrictStep
+    }), [brewingState, setMode, advanceStep, setBoiling, resetBrewing, syncBrewingState, setStrictStep]);
 };
