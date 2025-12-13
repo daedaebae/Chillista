@@ -44,7 +44,8 @@ export const useGame = () => {
             timePaused: false,
             infiniteResources: false,
             timeSpeed: 1
-        }
+        },
+        statsHistory: savedGame ? (savedGame.statsHistory || []) : []
     });
 
     // --- SUB-HOOKS ---
@@ -117,7 +118,9 @@ export const useGame = () => {
             setGameMeta(prev => ({
                 ...prev,
                 gameStarted: true,
-                playerName: playerName || prev.playerName || 'Barista'
+                playerName: playerName || prev.playerName || 'Barista',
+                // Reset history on new game if needed, or keep persistent? Usually new game = reset.
+                statsHistory: []
             }));
             time.setGameStarted(true);
             setUiState(prev => ({ ...prev, activeModal: null }));
@@ -143,20 +146,21 @@ export const useGame = () => {
         } catch (e) {
             console.error("startGame error:", e);
         }
-    }, [audio, time, settings, saveGame]);
+    }, [audio, time, settings, saveGame, customers]); // Added customers dependency
 
-    const toggleModal = useCallback((modalName) => {
+    const toggleModal = useCallback((modalName, tab = 'overview') => {
         if (!audio.settings.muteAll) audio.playSound('action');
         setUiState(prev => ({
             ...prev,
-            activeModal: prev.activeModal === modalName ? null : modalName
+            activeModal: prev.activeModal === modalName ? null : modalName,
+            initialTab: tab // Pass tab for StatsModal
         }));
     }, [audio.settings.muteAll, audio.playSound]);
 
     const advanceTimeWrapper = useCallback((minutes) => {
         if (gameMeta.debug.timePaused) return;
         // PAUSE GAME if Settings or other Modals are open
-        if (uiState.activeModal === 'settings' || uiState.activeModal === 'shop' || uiState.activeModal === 'inventory' || uiState.activeModal === 'wiki' || uiState.activeModal === 'intro') return;
+        if (uiState.activeModal && uiState.activeModal !== 'summary') return; // Pause on ALL modals except summary (which is EOD)
 
         time.advanceTime(minutes).then(newTimeState => {
             // 1. Check Patience
@@ -428,6 +432,19 @@ export const useGame = () => {
 
     // START NEW DAY
     const startNewDayWrapper = useCallback(() => {
+        // Record Stats History for the day ending
+        const historyEntry = {
+            day: time.timeState.day,
+            cash: inventory.inventoryState.cash,
+            reputation: customers.customerState.stats.reputation
+        };
+
+        setGameMeta(prev => ({
+            ...prev,
+            statsHistory: [...(prev.statsHistory || []), historyEntry]
+        }));
+
+
         time.startNewDay();
         customers.resetDailyStats();
         // Clear logs or add new day log
@@ -436,7 +453,9 @@ export const useGame = () => {
 
         setUiState(prev => ({ ...prev, activeModal: null }));
         audio.playSound('success');
-    }, [time, customers, addLog, audio]);
+    }, [time, customers, addLog, audio, inventory.inventoryState.cash]); // Added dependencies
+
+
 
 
 

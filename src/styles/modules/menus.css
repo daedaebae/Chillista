@@ -239,3 +239,133 @@ body.dark-mode .coffee-menu h2 {
         /* Ensure it fits but leaves a margin */
     }
 }
+
+/* Stats Modal */
+.stats-modal {
+    width: 600px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.stats-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: #5d4037;
+    color: #fffaf0;
+    border: 2px solid #3e2723;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: #795548;
+}
+
+.tab-btn.active {
+    background: #efebe9;
+    color: #3e2723;
+    border-color: #8d6e63;
+    font-weight: bold;
+}
+
+.stats-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    border: 1px solid #8d6e63;
+}
+
+.stat-graph {
+    height: 150px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3e2723;
+    padding-bottom: 5px;
+}
+
+.graph-bar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.graph-bar {
+    width: 100%;
+    min-height: 2px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    transition: height 0.3s ease;
+}
+
+.graph-label {
+    font-size: 0.7rem;
+    margin-top: 4px;
+}
+
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.roster-card {
+    background: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #d7ccc8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.roster-name {
+    font-weight: bold;
+    color: #3e2723;
+    margin-bottom: 4px;
+}
+
+.roster-info {
+    font-size: 0.8rem;
+    color: #5d4037;
+    margin-bottom: 4px;
+}
+
+.roster-fav {
+    font-size: 0.8rem;
+    color: #d32f2f;
+}
+
+.unlock-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: #eee;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+.unlock-item.unlocked {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.unlock-item.locked {
+    background: #ffcdd2;
+    color: #c62828;
+}

@@ -32,47 +32,44 @@ const HUD = ({ gameState, toggleModal }) => {
                 </div>
             </Tooltip>
 
-            <Tooltip text="Time: Current in-game time" placement="bottom">
+            <Tooltip text="Calendar: View game calendar" placement="bottom">
+                <div className="hud-item" onClick={() => toggleModal('calendar')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <span className="hud-icon" style={{ fontSize: '24px', marginRight: '5px' }}>🗓️</span>
+                    <span className="hud-value">Calendar</span>
+                </div>
+            </Tooltip>
+
+            <Tooltip text="Current in-game time" placement="bottom">
                 <div className="hud-item" style={{ display: 'flex', alignItems: 'center' }}>
                     <span className="hud-icon" style={{ fontSize: '24px', marginRight: '5px' }}>⏰</span>
                     <span id="time-display">{timeString}</span>
                 </div>
             </Tooltip>
 
-            <Tooltip text="Funds: Current money available" placement="bottom">
-                <div className="hud-item" style={{ display: 'flex', alignItems: 'center' }}>
+            <Tooltip text="Funds: Current money available (Click for Financials)" placement="bottom">
+                <div className="hud-item" onClick={() => toggleModal('financials')} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                     <span className="hud-icon" style={{ fontSize: '24px', marginRight: '5px' }}>💵</span>
                     <span id="cash-display">${cash.toFixed(2)}</span>
                 </div>
             </Tooltip>
 
-            <Tooltip text="Reputation: Your current fame" placement="bottom">
-                <div className="hud-item" style={{ display: 'flex', alignItems: 'center' }}>
+            <Tooltip text="Reputation: Your current fame (Click for Unlocks)" placement="bottom">
+                <div className="hud-item" onClick={() => toggleModal('reputation')} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                     <span className="hud-icon" style={{ fontSize: '24px', marginRight: '5px' }}>⭐</span>
                     <span id="rep-display">{stats.reputation} ★</span>
                 </div>
             </Tooltip>
 
-            <Tooltip text="Satisfaction: Current customer mood" placement="bottom">
-                <div className="hud-item" style={{ display: 'flex', alignItems: 'center' }}>
-                    <span className="hud-icon">😊</span>
-                    <div className="satisfaction-bar-container" style={{ width: '60px', height: '10px', background: '#333', borderRadius: '5px', marginLeft: '5px', overflow: 'hidden' }}>
-                        <div
-                            className="satisfaction-bar"
-                            style={{
-                                width: `${gameState.currentCustomer ? gameState.currentCustomer.satisfaction : 50}%`,
-                                height: '100%',
-                                background: 'linear-gradient(90deg, #ff4d4d, #f9cb28, #4dff4d)',
-                                transition: 'width 0.3s ease'
-                            }}
-                        ></div>
-                    </div>
+            <Tooltip text="Customers: View customer roster and satisfaction" placement="bottom">
+                <div className="hud-item" onClick={() => toggleModal('customers')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <span className="hud-icon" style={{ fontSize: '24px', marginRight: '5px' }}>😊</span>
+                    <span className="hud-value">Customers</span>
                 </div>
             </Tooltip>
 
             {/* Weather */}
             <Tooltip text={`Weather: ${weather.charAt(0).toUpperCase() + weather.slice(1)}`} placement="bottom">
-                <div className="hud-item" style={{ display: 'flex', alignItems: 'center' }}>
+                <div className="hud-item" onClick={() => toggleModal('calendar')} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                     <img
                         src={weatherIcons[weather] || weatherIcons.sunny}
                         alt={weather}

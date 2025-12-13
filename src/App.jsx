@@ -9,6 +9,10 @@ import InventoryModal from './components/InventoryModal';
 import SettingsModal from './components/SettingsModal';
 
 import WikiModal from './components/WikiModal';
+import FinancialsModal from './components/FinancialsModal';
+import ReputationModal from './components/ReputationModal';
+import CustomersModal from './components/CustomersModal';
+import CalendarModal from './components/CalendarModal';
 
 import IntroModal from './components/IntroModal';
 import GameLog from './components/GameLog';
@@ -96,11 +100,37 @@ function App() {
         gameState={game.gameState}
       />
 
-      <WikiModal
-        isOpen={uiState.activeModal === 'wiki'}
-        onClose={() => toggleModal('wiki')}
-      />
+      {uiState.activeModal === 'financials' && (
+        <FinancialsModal
+          gameState={game.gameState}
+          close={() => toggleModal('financials')}
+        />
+      )}
 
+      {uiState.activeModal === 'reputation' && (
+        <ReputationModal
+          gameState={game.gameState}
+          close={() => toggleModal('reputation')}
+        />
+      )}
+
+      {uiState.activeModal === 'customers' && (
+        <CustomersModal
+          gameState={game.gameState}
+          close={() => toggleModal('customers')}
+        />
+      )}
+
+      {uiState.activeModal === 'calendar' && (
+        <CalendarModal
+          gameState={game.gameState}
+          close={() => toggleModal('calendar')}
+        />
+      )}
+
+      {uiState.activeModal === 'wiki' && (
+        <WikiModal close={() => toggleModal('wiki')} />
+      )}
 
       <DebugModal
         isOpen={uiState.showDebug}
